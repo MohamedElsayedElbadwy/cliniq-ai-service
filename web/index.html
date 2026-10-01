@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ClinIQ Voice Call</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">cliniclIQ VOICE ASSISTANT</p>
+        <h1>📞 Voice Call</h1>
+        <p class="subtle">Arabic, Egyptian Arabic, and English</p>
+      </header>
+
+      <section class="controls" aria-label="Call controls">
+        <button id="start-call-button" type="button">Start Voice Call</button>
+        <button id="mute-button" type="button" disabled aria-pressed="false">Mute</button>
+        <button id="end-call-button" type="button" disabled>End Call</button>
+      </section>
+
+      <section class="status-panel" aria-live="polite">
+        <div><span>Connection</span><strong id="connection-status">Disconnected</strong></div>
+        <div><span>Microphone</span><strong id="microphone-status">Off</strong></div>
+        <div><span>Assistant</span><strong id="assistant-status">Waiting</strong></div>
+      </section>
+
+      <section class="transcript-panel" aria-live="polite">
+        <h2>Conversation</h2>
+        <ol id="transcript"><li class="empty">Start a call to begin.</li></ol>
+      </section>
+
+      <p id="error-message" class="error" role="alert"></p>
+      <p class="safety">General informational assistance only. Not for diagnosis or emergencies.</p>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
