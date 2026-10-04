@@ -5,3 +5,6 @@ groq
 python-multipart
 pytest
 av
+numpy
+Pillow
+tensorflow

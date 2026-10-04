@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from mri.router import router as mri_router
 from voice.router import router as voice_router
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -17,6 +18,7 @@ load_dotenv(PROJECT_DIR / ".env")
 app = FastAPI(title="ClinIQ AI Service", version="1.0.0")
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 app.include_router(voice_router, prefix="/api/ai/voice")
+app.include_router(mri_router, prefix="/api/ai")
 
 
 @app.get("/", include_in_schema=False)
