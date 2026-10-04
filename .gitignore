@@ -10,3 +10,5 @@ dist/
 build/
 .streamlit/
 *.log
+models/*.keras
+models/*.h5
