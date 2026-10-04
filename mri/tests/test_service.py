@@ -34,6 +34,16 @@ class MockKerasModel:
         return np.tile(self.probabilities, (len(batch), 1))
 
 
+def test_default_class_names_match_the_training_artifacts() -> None:
+    """Keep the index order recorded in class_names.json and training metadata."""
+    assert DEFAULT_CLASS_NAMES == {
+        0: "glioma",
+        1: "meningioma",
+        2: "notumor",
+        3: "pituitary",
+    }
+
+
 # ------------------------------------------------------------------------------
 # 1. Preprocessing Unit Tests
 # ------------------------------------------------------------------------------

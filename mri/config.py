@@ -29,7 +29,7 @@ class MRISettings:
 
 
 def find_model_path() -> Path | None:
-    """Return the configured or locally available Keras checkpoint, if present."""
+    """Return the configured checkpoint or the exact default checkpoint, if present."""
     configured_path = os.getenv("CLINIQ_MRI_MODEL_PATH") or os.getenv("MRI_MODEL_PATH")
     if configured_path:
         candidate = Path(configured_path).expanduser()
@@ -40,8 +40,7 @@ def find_model_path() -> Path | None:
     if expected_path.is_file():
         return expected_path
 
-    candidates = sorted([*MODELS_DIR.glob("*.keras"), *MODELS_DIR.glob("*.h5")])
-    return candidates[0] if candidates else None
+    return None
 
 
 def get_settings() -> MRISettings:
