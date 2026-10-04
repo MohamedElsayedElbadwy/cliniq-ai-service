@@ -40,6 +40,8 @@ the same training run in `models/`, or set `CLINIQ_MRI_CLASS_NAMES_PATH` to its 
 This metadata is required and must use the format `{ "0": "class-name", ... }`.
 If either artifact is absent or invalid, health reports the module as unavailable and
 predict returns HTTP 503; the Voice feature remains available.
+The predictor is created at startup and cached. After adding or changing the `.keras`
+file or `class_names.json`, restart the service.
 
 ```powershell
 curl.exe -X POST http://127.0.0.1:8080/api/ai/mri/predict `
@@ -62,8 +64,14 @@ python scripts/verify_class_mapping.py `
 ```
 
 The script reuses production preprocessing and prints the inferred index-to-folder
-mapping, the mapping in `class_names.json`, whether they match, and sampled accuracy.
-Set `CLINIQ_MRI_CLASS_NAMES_PATH` when the metadata is not at `models/class_names.json`.
+mapping, the mapping in `class_names.json`, whether they match, sampled and per-class
+accuracy, and a confusion table whose rows are true folders and columns are predicted
+indexes. Set `CLINIQ_MRI_CLASS_NAMES_PATH` when the metadata is not at
+`models/class_names.json`. Use `--min-accuracy` to set the minimum overall accuracy
+(default `0.80`). The script exits 0 when the mapping matches and accuracy meets the
+threshold, 1 when the predictor is unavailable, 2 for invalid input, and 3 when the
+mapping differs or accuracy is below the threshold. Low accuracy spread across all
+classes usually points to a preprocessing mismatch, not a class-order problem.
 
 ## Architecture
 
