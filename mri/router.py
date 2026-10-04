@@ -13,7 +13,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from .config import ALLOWED_IMAGE_CONTENT_TYPES, ALLOWED_IMAGE_EXTENSIONS, get_settings
 from .schemas import MRIHealthResponse, MRIPredictionResponse
-from .service import InvalidImageError, ModelUnavailableError, MRIPredictor, get_mri_predictor
+from .service import InvalidImageError, ModelInferenceError, ModelUnavailableError, MRIPredictor, get_mri_predictor
 
 
 router = APIRouter(tags=["MRI"])
@@ -40,7 +40,7 @@ def health_check(predictor: Annotated[MRIPredictor, Depends(get_mri_service)]) -
     return MRIHealthResponse(
         status="unavailable",
         model_available=False,
-        message="MRI model weights are unavailable. Configure CLINIQ_MRI_MODEL_PATH before inference.",
+        message=predictor.unavailable_message,
     )
 
 
@@ -68,6 +68,8 @@ async def predict_image(
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(error)) from error
     except InvalidImageError as error:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error)) from error
+    except ModelInferenceError as error:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="MRI model inference failed.") from error
     return MRIPredictionResponse(
         prediction=result["prediction"],
         class_index=result["class_index"],

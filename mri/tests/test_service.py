@@ -14,6 +14,7 @@ from PIL import Image
 from mri.service import (
     DEFAULT_TARGET_SIZE,
     InvalidImageError,
+    ModelInferenceError,
     ModelUnavailableError,
     MRIPredictor,
     load_image_to_pil,
@@ -29,6 +30,7 @@ class MockKerasModel:
 
     def __init__(self, probabilities: list[float] | None = None) -> None:
         self.probabilities = probabilities or [0.10, 0.70, 0.10, 0.10]
+        self.output_shape = (None, len(self.probabilities))
 
     def predict(self, batch: np.ndarray, verbose: int = 0) -> np.ndarray:
         assert batch.shape == (len(batch), 299, 299, 3)
@@ -126,9 +128,9 @@ def test_preprocess_mri_batch() -> None:
 # 2. Predictor Service Tests
 # ------------------------------------------------------------------------------
 
-def test_mri_predictor_success() -> None:
+def test_mri_predictor_success(class_names_path: Path) -> None:
     mock_model = MockKerasModel(probabilities=[0.05, 0.85, 0.05, 0.05])
-    predictor = MRIPredictor(model_instance=mock_model)
+    predictor = MRIPredictor(model_instance=mock_model, class_names_path=class_names_path)
 
     assert predictor.is_ready is True
 
@@ -143,9 +145,9 @@ def test_mri_predictor_success() -> None:
     assert result["error"] is None
 
 
-def test_mri_predictor_predict_bytes() -> None:
+def test_mri_predictor_predict_bytes(class_names_path: Path) -> None:
     mock_model = MockKerasModel(probabilities=[0.10, 0.10, 0.70, 0.10])
-    predictor = MRIPredictor(model_instance=mock_model)
+    predictor = MRIPredictor(model_instance=mock_model, class_names_path=class_names_path)
 
     buf = io.BytesIO()
     Image.new("RGB", (64, 64), color=(30, 30, 30)).save(buf, format="JPEG")
@@ -157,9 +159,9 @@ def test_mri_predictor_predict_bytes() -> None:
     assert result["confidence"] == pytest.approx(0.70, abs=1e-3)
 
 
-def test_mri_predictor_batch() -> None:
+def test_mri_predictor_batch(class_names_path: Path) -> None:
     mock_model = MockKerasModel(probabilities=[0.90, 0.04, 0.03, 0.03])
-    predictor = MRIPredictor(model_instance=mock_model)
+    predictor = MRIPredictor(model_instance=mock_model, class_names_path=class_names_path)
 
     imgs = [Image.new("RGB", (50, 50)), Image.new("RGB", (60, 60))]
     results = predictor.predict_batch(imgs)
@@ -170,8 +172,8 @@ def test_mri_predictor_batch() -> None:
         assert res["prediction"] == "glioma"
 
 
-def test_mri_predictor_unweighted_error() -> None:
-    predictor = MRIPredictor(model_path="non_existent_weights_file.keras")
+def test_mri_predictor_unweighted_error(class_names_path: Path) -> None:
+    predictor = MRIPredictor(model_path="non_existent_weights_file.keras", class_names_path=class_names_path)
     dummy_img = Image.new("RGB", (50, 50))
 
     assert predictor.is_ready is False
@@ -179,9 +181,52 @@ def test_mri_predictor_unweighted_error() -> None:
         predictor.predict(dummy_img)
 
 
-def test_mri_predictor_corrupt_payload_graceful_error() -> None:
+def test_mri_predictor_corrupt_payload_graceful_error(class_names_path: Path) -> None:
     mock_model = MockKerasModel()
-    predictor = MRIPredictor(model_instance=mock_model)
+    predictor = MRIPredictor(model_instance=mock_model, class_names_path=class_names_path)
 
-    with pytest.raises(InvalidImageError, match="Image processing or inference failed"):
+    with pytest.raises(InvalidImageError, match="Image processing failed"):
         predictor.predict(b"corrupted_invalid_data")
+
+
+def test_mri_predictor_reports_model_failures_separately(class_names_path: Path) -> None:
+    class FailingModel(MockKerasModel):
+        def predict(self, batch: np.ndarray, verbose: int = 0) -> np.ndarray:
+            raise RuntimeError("simulated model failure")
+
+    predictor = MRIPredictor(model_instance=FailingModel(), class_names_path=class_names_path)
+
+    with pytest.raises(ModelInferenceError, match="MRI model inference failed"):
+        predictor.predict(Image.new("RGB", (50, 50)))
+
+
+def test_mri_predictor_rejects_missing_class_mapping(tmp_path: Path) -> None:
+    predictor = MRIPredictor(model_instance=MockKerasModel(), class_names_path=tmp_path / "class_names.json")
+
+    assert predictor.is_ready is False
+    assert predictor.load_error == "Class mapping metadata 'class_names.json' is missing."
+
+
+def test_mri_predictor_rejects_duplicate_class_names(tmp_path: Path) -> None:
+    class_names_path = tmp_path / "class_names.json"
+    class_names_path.write_text('{"0": "glioma", "1": "glioma"}', encoding="utf-8")
+    predictor = MRIPredictor(model_instance=MockKerasModel(), class_names_path=class_names_path)
+
+    assert predictor.is_ready is False
+    assert "duplicate class names" in predictor.load_error
+
+
+def test_mri_predictor_rejects_missing_class_index(tmp_path: Path) -> None:
+    class_names_path = tmp_path / "class_names.json"
+    class_names_path.write_text('{"0": "glioma", "2": "pituitary"}', encoding="utf-8")
+    predictor = MRIPredictor(model_instance=MockKerasModel(), class_names_path=class_names_path)
+
+    assert predictor.is_ready is False
+    assert "consecutive indexes" in predictor.load_error
+
+
+def test_mri_predictor_rejects_output_size_mismatch(class_names_path: Path) -> None:
+    predictor = MRIPredictor(model_instance=MockKerasModel(probabilities=[0.5, 0.5]), class_names_path=class_names_path)
+
+    assert predictor.is_ready is False
+    assert predictor.load_error == "MRI model output size does not match class mapping metadata."

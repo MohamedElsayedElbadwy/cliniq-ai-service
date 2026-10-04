@@ -35,8 +35,11 @@ The MRI module is available at:
 
 Place `mri_xception_selective_finetuning_best.keras` in `models/`, or set
 `CLINIQ_MRI_MODEL_PATH` in `.env` to the full path of that file. The model weights are
-intentionally ignored by Git. If weights are absent or cannot load, health reports the
-module as unavailable and predict returns HTTP 503; the Voice feature remains available.
+intentionally ignored by Git. Also place the matching `class_names.json` exported from
+the same training run in `models/`, or set `CLINIQ_MRI_CLASS_NAMES_PATH` to its path.
+This metadata is required and must use the format `{ "0": "class-name", ... }`.
+If either artifact is absent or invalid, health reports the module as unavailable and
+predict returns HTTP 503; the Voice feature remains available.
 
 ```powershell
 curl.exe -X POST http://127.0.0.1:8080/api/ai/mri/predict `
@@ -45,6 +48,22 @@ curl.exe -X POST http://127.0.0.1:8080/api/ai/mri/predict `
 
 MRI output is a model classification only. It is not a medical diagnosis and must not
 be used as a substitute for qualified clinical judgment.
+
+## Verifying the class mapping
+
+After exporting `class_names.json` from the training run, verify it against a labeled
+testing directory with one subfolder per true class:
+
+```powershell
+python scripts/verify_class_mapping.py `
+  --model models/mri_xception_selective_finetuning_best.keras `
+  --data C:\path\to\testing `
+  --per-class 50
+```
+
+The script reuses production preprocessing and prints the inferred index-to-folder
+mapping, the mapping in `class_names.json`, whether they match, and sampled accuracy.
+Set `CLINIQ_MRI_CLASS_NAMES_PATH` when the metadata is not at `models/class_names.json`.
 
 ## Architecture
 

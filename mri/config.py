@@ -25,6 +25,7 @@ class MRISettings:
     """Runtime settings for the MRI classifier."""
 
     model_path: Path | None
+    class_names_path: Path
     max_upload_size_bytes: int = MAX_UPLOAD_SIZE_BYTES
 
 
@@ -43,6 +44,14 @@ def find_model_path() -> Path | None:
     return None
 
 
+def find_class_names_path() -> Path:
+    """Return the configured class-mapping metadata path."""
+    configured_path = os.getenv("CLINIQ_MRI_CLASS_NAMES_PATH")
+    if configured_path:
+        return Path(configured_path).expanduser()
+    return MODELS_DIR / "class_names.json"
+
+
 def get_settings() -> MRISettings:
     """Create settings at call time so environment changes are respected."""
-    return MRISettings(model_path=find_model_path())
+    return MRISettings(model_path=find_model_path(), class_names_path=find_class_names_path())

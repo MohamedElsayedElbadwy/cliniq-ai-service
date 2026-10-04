@@ -14,13 +14,17 @@ from mri.service import MRIPredictor
 
 
 class MockKerasModel:
+    output_shape = (None, 4)
+
     def predict(self, batch, verbose: int = 0):
         return [[0.05, 0.05, 0.85, 0.05]]
 
 
 @pytest.fixture
-def client() -> TestClient:
-    app.dependency_overrides[get_mri_service] = lambda: MRIPredictor(model_instance=MockKerasModel())
+def client(class_names_path) -> TestClient:
+    app.dependency_overrides[get_mri_service] = lambda: MRIPredictor(
+        model_instance=MockKerasModel(), class_names_path=class_names_path
+    )
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

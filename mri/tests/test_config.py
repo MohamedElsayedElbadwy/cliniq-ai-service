@@ -35,3 +35,10 @@ def test_unrelated_model_files_are_not_selected(monkeypatch: pytest.MonkeyPatch,
     monkeypatch.setattr(config, "MODELS_DIR", tmp_path)
 
     assert config.find_model_path() is None
+
+
+def test_configured_class_mapping_path_has_priority(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    configured_mapping = tmp_path / "training-class-names.json"
+    monkeypatch.setenv("CLINIQ_MRI_CLASS_NAMES_PATH", str(configured_mapping))
+
+    assert config.find_class_names_path() == configured_mapping

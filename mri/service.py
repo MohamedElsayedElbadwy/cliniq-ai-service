@@ -15,11 +15,10 @@ from typing import Any, Optional, Sequence, Union
 import numpy as np
 from PIL import Image, ImageOps
 
-from .config import DEFAULT_CHECKPOINT_NAME, MODELS_DIR, find_model_path
+from .config import DEFAULT_CHECKPOINT_NAME, MODELS_DIR, find_class_names_path, find_model_path
 
 
 logger = logging.getLogger(__name__)
-DEFAULT_CLASS_NAMES = {0: "glioma", 1: "meningioma", 2: "notumor", 3: "pituitary"}
 DEFAULT_TARGET_SIZE = (299, 299)
 SUPPORTED_IMAGE_TYPES = Union[str, Path, bytes, bytearray, io.BytesIO, Image.Image, np.ndarray]
 
@@ -30,6 +29,10 @@ class ModelUnavailableError(RuntimeError):
 
 class InvalidImageError(ValueError):
     """Raised when an image cannot be processed for MRI inference."""
+
+
+class ModelInferenceError(RuntimeError):
+    """Raised when an available model cannot produce a valid prediction."""
 
 
 def load_image_to_pil(image_input: SUPPORTED_IMAGE_TYPES) -> Image.Image:
@@ -112,53 +115,99 @@ class MRIPredictor:
         class_names_path: Optional[Union[str, Path]] = None,
         model_instance: Any = None,
     ) -> None:
-        self.class_names = self._load_class_names(class_names_path)
         self.model: Any = model_instance
-        self.load_error: Exception | None = None
+        self.class_names: dict[int, str] = {}
+        self.load_error: str | None = None
         self.model_path = Path("in_memory_instance") if model_instance is not None else (
             Path(model_path) if model_path else find_model_path()
         )
-        if model_instance is None and self.model_path and self.model_path.is_file():
+        self.class_names_path = Path(class_names_path) if class_names_path else find_class_names_path()
+
+        try:
+            self.class_names = self._load_class_names(self.class_names_path)
+        except ValueError as error:
+            self.load_error = str(error)
+
+        if self.load_error is None and model_instance is None and self.model_path and self.model_path.is_file():
             self._load_model()
+        elif self.load_error is None and model_instance is None:
+            self.load_error = self._missing_model_message()
+
+        if self.load_error is None and self.model is not None:
+            self._validate_output_size()
 
     @property
     def is_ready(self) -> bool:
         """Whether a model instance is available for inference."""
-        return self.model is not None
+        return self.model is not None and bool(self.class_names) and self.load_error is None
 
     @staticmethod
-    def _load_class_names(class_names_path: Optional[Union[str, Path]]) -> dict[int, str]:
-        path = Path(class_names_path) if class_names_path else MODELS_DIR / "class_names.json"
-        if path.is_file():
-            try:
-                with path.open(encoding="utf-8") as file:
-                    parsed = {int(index): str(name) for index, name in json.load(file).items()}
-                if set(parsed) == set(DEFAULT_CLASS_NAMES):
-                    return parsed
-            except (OSError, ValueError, TypeError) as error:
-                logger.warning("Unable to read class mapping at %s: %s", path, error)
-        return DEFAULT_CLASS_NAMES.copy()
+    def _load_class_names(path: Path) -> dict[int, str]:
+        """Load and validate training-run class metadata without a fallback."""
+        if not path.is_file():
+            raise ValueError(f"Class mapping metadata '{path.name}' is missing.")
+        try:
+            with path.open(encoding="utf-8") as file:
+                raw_mapping = json.load(file)
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError(f"Class mapping metadata '{path.name}' is invalid.") from error
+
+        if not isinstance(raw_mapping, dict) or not raw_mapping:
+            raise ValueError(f"Class mapping metadata '{path.name}' must be a non-empty JSON object.")
+        try:
+            parsed = {int(index): name for index, name in raw_mapping.items()}
+        except (TypeError, ValueError) as error:
+            raise ValueError(f"Class mapping metadata '{path.name}' has non-integer indexes.") from error
+        if len(parsed) != len(raw_mapping) or set(parsed) != set(range(len(parsed))):
+            raise ValueError(f"Class mapping metadata '{path.name}' must use consecutive indexes starting at 0.")
+        if any(not isinstance(name, str) or not name.strip() for name in parsed.values()):
+            raise ValueError(f"Class mapping metadata '{path.name}' contains an empty class name.")
+        if len(set(parsed.values())) != len(parsed):
+            raise ValueError(f"Class mapping metadata '{path.name}' contains duplicate class names.")
+        return parsed
 
     def _load_model(self) -> None:
         try:
             import tensorflow as tf
             self.model = tf.keras.models.load_model(self.model_path, compile=False)
         except Exception as error:
-            self.load_error = error
             logger.warning("Unable to load MRI model weights from %s: %s", self.model_path, error)
+            self.load_error = f"Unable to load MRI model weights '{self.model_path.name}'."
 
-    def _unavailable_message(self) -> str:
+    def _validate_output_size(self) -> None:
+        """Ensure training metadata and model output dimensions agree."""
+        try:
+            output_size = self.model.output_shape[-1]
+        except (AttributeError, IndexError, TypeError) as error:
+            self.load_error = "MRI model output shape is unavailable."
+            logger.warning("Unable to determine MRI model output shape: %s", error)
+            return
+        if not isinstance(output_size, (int, np.integer)) or output_size != len(self.class_names):
+            self.load_error = "MRI model output size does not match class mapping metadata."
+            logger.warning("MRI model output size %s does not match %s classes.", output_size, len(self.class_names))
+
+    def _missing_model_message(self) -> str:
         return (
             "MRI model weights are unavailable. Set CLINIQ_MRI_MODEL_PATH or place "
-            f"'{DEFAULT_CHECKPOINT_NAME}' in '{MODELS_DIR}'."
+            f"'{DEFAULT_CHECKPOINT_NAME}' in '{MODELS_DIR.name}'."
         )
+
+    @property
+    def unavailable_message(self) -> str:
+        """Readable reason why the predictor cannot currently serve requests."""
+        return self.load_error or self._missing_model_message()
 
     def predict(self, image_input: SUPPORTED_IMAGE_TYPES) -> dict[str, Any]:
         """Return one class prediction and the model's softmax outputs."""
         if not self.is_ready:
-            raise ModelUnavailableError(self._unavailable_message())
+            raise ModelUnavailableError(self.unavailable_message)
         try:
             tensor = preprocess_mri_image(image_input, target_size=DEFAULT_TARGET_SIZE)
+        except Exception as error:
+            logger.warning("MRI image preprocessing failed: %s", error)
+            raise InvalidImageError(f"Image processing failed: {error}") from error
+
+        try:
             output = np.asarray(self.model.predict(tensor, verbose=0), dtype=np.float32)
             if output.shape != (1, len(self.class_names)):
                 raise ValueError(f"Unexpected model output shape {output.shape}; expected (1, {len(self.class_names)}).")
@@ -179,7 +228,7 @@ class MRIPredictor:
             }
         except Exception as error:
             logger.warning("MRI inference failed: %s", error)
-            raise InvalidImageError(f"Image processing or inference failed: {error}") from error
+            raise ModelInferenceError("MRI model inference failed.") from error
 
     def predict_batch(self, images: Sequence[SUPPORTED_IMAGE_TYPES]) -> list[dict[str, Any]]:
         return [self.predict(image) for image in images]
