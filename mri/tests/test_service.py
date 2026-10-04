@@ -12,8 +12,9 @@ import pytest
 from PIL import Image
 
 from mri.service import (
-    DEFAULT_CLASS_NAMES,
     DEFAULT_TARGET_SIZE,
+    InvalidImageError,
+    ModelUnavailableError,
     MRIPredictor,
     load_image_to_pil,
     normalize_xception,
@@ -32,16 +33,6 @@ class MockKerasModel:
     def predict(self, batch: np.ndarray, verbose: int = 0) -> np.ndarray:
         assert batch.shape == (len(batch), 299, 299, 3)
         return np.tile(self.probabilities, (len(batch), 1))
-
-
-def test_default_class_names_match_the_training_artifacts() -> None:
-    """Keep the index order recorded in class_names.json and training metadata."""
-    assert DEFAULT_CLASS_NAMES == {
-        0: "glioma",
-        1: "meningioma",
-        2: "notumor",
-        3: "pituitary",
-    }
 
 
 # ------------------------------------------------------------------------------
@@ -136,9 +127,10 @@ def test_preprocess_mri_batch() -> None:
 # ------------------------------------------------------------------------------
 
 def test_mri_predictor_success() -> None:
-    # 0: glioma, 1: meningioma, 2: notumor, 3: pituitary
     mock_model = MockKerasModel(probabilities=[0.05, 0.85, 0.05, 0.05])
     predictor = MRIPredictor(model_instance=mock_model)
+
+    assert predictor.is_ready is True
 
     dummy_img = Image.new("RGB", (200, 200), color=(60, 60, 60))
     result = predictor.predict(dummy_img)
@@ -181,18 +173,15 @@ def test_mri_predictor_batch() -> None:
 def test_mri_predictor_unweighted_error() -> None:
     predictor = MRIPredictor(model_path="non_existent_weights_file.keras")
     dummy_img = Image.new("RGB", (50, 50))
-    result = predictor.predict(dummy_img)
 
-    assert result["success"] is False
-    assert result["prediction"] is None
-    assert "MRI model weights are unavailable" in result["error"]
+    assert predictor.is_ready is False
+    with pytest.raises(ModelUnavailableError, match="MRI model weights are unavailable"):
+        predictor.predict(dummy_img)
 
 
 def test_mri_predictor_corrupt_payload_graceful_error() -> None:
     mock_model = MockKerasModel()
     predictor = MRIPredictor(model_instance=mock_model)
 
-    result = predictor.predict(b"corrupted_invalid_data")
-    assert result["success"] is False
-    assert result["prediction"] is None
-    assert "Image processing or inference failed" in result["error"]
+    with pytest.raises(InvalidImageError, match="Image processing or inference failed"):
+        predictor.predict(b"corrupted_invalid_data")

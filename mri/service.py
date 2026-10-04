@@ -6,8 +6,8 @@ never adds diagnosis, treatment, triage, or clinical interpretation.
 
 from __future__ import annotations
 
-import json
 import io
+import json
 import logging
 from pathlib import Path
 from typing import Any, Optional, Sequence, Union
@@ -22,6 +22,14 @@ logger = logging.getLogger(__name__)
 DEFAULT_CLASS_NAMES = {0: "glioma", 1: "meningioma", 2: "notumor", 3: "pituitary"}
 DEFAULT_TARGET_SIZE = (299, 299)
 SUPPORTED_IMAGE_TYPES = Union[str, Path, bytes, bytearray, io.BytesIO, Image.Image, np.ndarray]
+
+
+class ModelUnavailableError(RuntimeError):
+    """Raised when the MRI predictor has no usable model instance."""
+
+
+class InvalidImageError(ValueError):
+    """Raised when an image cannot be processed for MRI inference."""
 
 
 def load_image_to_pil(image_input: SUPPORTED_IMAGE_TYPES) -> Image.Image:
@@ -103,19 +111,20 @@ class MRIPredictor:
         model_path: Optional[Union[str, Path]] = None,
         class_names_path: Optional[Union[str, Path]] = None,
         model_instance: Any = None,
-        **_deprecated_options: Any,
     ) -> None:
         self.class_names = self._load_class_names(class_names_path)
         self.model: Any = model_instance
+        self.load_error: Exception | None = None
         self.model_path = Path("in_memory_instance") if model_instance is not None else (
             Path(model_path) if model_path else find_model_path()
         )
         if model_instance is None and self.model_path and self.model_path.is_file():
             self._load_model()
 
-    @staticmethod
-    def _error(message: str) -> dict[str, Any]:
-        return {"success": False, "prediction": None, "class_index": None, "confidence": 0.0, "probabilities": {}, "error": message}
+    @property
+    def is_ready(self) -> bool:
+        """Whether a model instance is available for inference."""
+        return self.model is not None
 
     @staticmethod
     def _load_class_names(class_names_path: Optional[Union[str, Path]]) -> dict[int, str]:
@@ -135,15 +144,19 @@ class MRIPredictor:
             import tensorflow as tf
             self.model = tf.keras.models.load_model(self.model_path, compile=False)
         except Exception as error:
-            raise RuntimeError(f"Unable to load MRI model weights from {self.model_path}: {error}") from error
+            self.load_error = error
+            logger.warning("Unable to load MRI model weights from %s: %s", self.model_path, error)
+
+    def _unavailable_message(self) -> str:
+        return (
+            "MRI model weights are unavailable. Set CLINIQ_MRI_MODEL_PATH or place "
+            f"'{DEFAULT_CHECKPOINT_NAME}' in '{MODELS_DIR}'."
+        )
 
     def predict(self, image_input: SUPPORTED_IMAGE_TYPES) -> dict[str, Any]:
         """Return one class prediction and the model's softmax outputs."""
-        if self.model is None:
-            return self._error(
-                "MRI model weights are unavailable. Set CLINIQ_MRI_MODEL_PATH or place "
-                f"'{DEFAULT_CHECKPOINT_NAME}' in '{MODELS_DIR}'."
-            )
+        if not self.is_ready:
+            raise ModelUnavailableError(self._unavailable_message())
         try:
             tensor = preprocess_mri_image(image_input, target_size=DEFAULT_TARGET_SIZE)
             output = np.asarray(self.model.predict(tensor, verbose=0), dtype=np.float32)
@@ -166,7 +179,7 @@ class MRIPredictor:
             }
         except Exception as error:
             logger.warning("MRI inference failed: %s", error)
-            return self._error(f"Image processing or inference failed: {error}")
+            raise InvalidImageError(f"Image processing or inference failed: {error}") from error
 
     def predict_batch(self, images: Sequence[SUPPORTED_IMAGE_TYPES]) -> list[dict[str, Any]]:
         return [self.predict(image) for image in images]
@@ -181,11 +194,11 @@ class MRIPredictor:
 _GLOBAL_PREDICTOR: Optional[MRIPredictor] = None
 
 
-def get_mri_predictor(model_path: Optional[Union[str, Path]] = None, reload_model: bool = False, **deprecated_options: Any) -> MRIPredictor:
+def get_mri_predictor(model_path: Optional[Union[str, Path]] = None, reload_model: bool = False) -> MRIPredictor:
     """Return a cached predictor so a web service does not reload weights per request."""
     global _GLOBAL_PREDICTOR
     if _GLOBAL_PREDICTOR is None or reload_model:
-        _GLOBAL_PREDICTOR = MRIPredictor(model_path=model_path, **deprecated_options)
+        _GLOBAL_PREDICTOR = MRIPredictor(model_path=model_path)
     return _GLOBAL_PREDICTOR
 
 

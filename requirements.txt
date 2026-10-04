@@ -5,6 +5,7 @@ groq
 python-multipart
 pytest
 av
-numpy
-Pillow
+numpy==2.5.3
+Pillow==12.3.0
 tensorflow==2.21.0
+keras==3.15.1

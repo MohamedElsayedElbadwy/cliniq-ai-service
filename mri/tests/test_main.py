@@ -29,7 +29,7 @@ def client() -> TestClient:
 def test_mri_routes_mounted_in_main_app(client: TestClient) -> None:
     health_response = client.get("/api/ai/mri/health")
     assert health_response.status_code == 200
-    assert set(health_response.json()) == {"status", "model_available", "message"}
+    assert set(health_response.json()) == {"status", "modelAvailable", "message"}
 
     stream = io.BytesIO()
     Image.new("RGB", (100, 100)).save(stream, format="PNG")
@@ -40,6 +40,7 @@ def test_mri_routes_mounted_in_main_app(client: TestClient) -> None:
     assert prediction_response.status_code == 200
     payload = prediction_response.json()
     assert payload["prediction"] == "notumor"
+    assert payload["classIndex"] == 2
     assert payload["confidence"] == pytest.approx(0.85)
     assert "diagnosis" not in payload
 

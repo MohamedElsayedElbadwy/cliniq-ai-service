@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from main import app
+import mri.router as mri_router
 from mri.router import get_mri_service
 from mri.service import MRIPredictor
 
@@ -42,6 +43,8 @@ def test_predict_accepts_supported_image_modes(client: TestClient, mode: str) ->
     assert response.status_code == 200
     body = response.json()
     assert body["prediction"] == "notumor"
+    assert body["classIndex"] == 2
+    assert "class_index" not in body
     assert body["confidence"] == pytest.approx(0.80)
     assert sum(body["probabilities"].values()) == pytest.approx(1.0)
     assert "diagnosis" not in body
@@ -66,7 +69,50 @@ def test_predict_rejects_uploads_over_the_size_limit(client: TestClient) -> None
     assert response.status_code == 413
 
 
+def test_predict_runs_in_threadpool(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    called = False
+
+    async def mock_run_in_threadpool(function, *args, **kwargs):
+        nonlocal called
+        called = True
+        return function(*args, **kwargs)
+
+    monkeypatch.setattr(mri_router, "run_in_threadpool", mock_run_in_threadpool)
+    response = client.post(
+        "/api/ai/mri/predict",
+        files={"file": ("scan.png", _image_bytes(), "image/png")},
+    )
+
+    assert response.status_code == 200
+    assert called is True
+
+
+def test_predict_returns_503_when_model_is_unavailable() -> None:
+    app.dependency_overrides[get_mri_service] = lambda: MRIPredictor(model_path="missing-model.keras")
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/ai/mri/predict",
+            files={"file": ("scan.png", _image_bytes(), "image/png")},
+        )
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 503
+    assert "MRI model weights are unavailable" in response.json()["detail"]
+
+
 def test_health_endpoint_is_exposed(client: TestClient) -> None:
     response = client.get("/api/ai/mri/health")
     assert response.status_code == 200
-    assert set(response.json()) == {"status", "model_available", "message"}
+    assert response.json()["modelAvailable"] is True
+    assert "model_available" not in response.json()
+
+
+def test_health_reflects_unavailable_cached_predictor() -> None:
+    app.dependency_overrides[get_mri_service] = lambda: MRIPredictor(model_path="missing-model.keras")
+    with TestClient(app) as client:
+        response = client.get("/api/ai/mri/health")
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "unavailable"
+    assert response.json()["modelAvailable"] is False
