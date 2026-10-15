@@ -85,6 +85,11 @@ def predict_split(model, protocol, split, batch_size):
                            for batch in image_batches(protocol, split, batch_size)])
 
 
+def epoch_order(count, epoch):
+    """Globally mix lightweight indexes before decoding class-sorted CSV rows."""
+    return np.random.default_rng(np.random.SeedSequence([42, epoch])).permutation(count)
+
+
 def configure_tensorflow(require_gpu):
     os.environ.setdefault('KERAS_BACKEND', 'tensorflow')
     os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
@@ -120,6 +125,7 @@ def train(args):
                   sourceManifestSha256=provenance['sourceManifestSha256'],
                   tensorflowVersion=tf.__version__, kerasVersion=tf.keras.__version__,
                   augmentation='train only: horizontal flip, rotation .04, zoom .1, contrast .1',
+                  trainingOrder='global seeded index permutation per epoch; validation/test retain manifest order',
                   labelSmoothing=.05, testImagesRead=False, productionEligible=not args.allow_cpu,
                   note='--allow-cpu is an offline smoke test and cannot produce a deployable export' if args.allow_cpu else '')
     create_run(args.run, config)
@@ -131,17 +137,20 @@ def train(args):
 
     def dataset(split):
         rows = protocol['rows'][split]
+        epoch = 0
 
         def samples():
-            for row in rows:
+            nonlocal epoch
+            order = epoch_order(len(rows), epoch) if split == 'train' else range(len(rows))
+            epoch += 1
+            for index in order:
+                row = rows[index]
                 image = preprocess_skin_image(protocol['workspace'] / row['path'], max_pixels=100_000_000)[0]
                 yield image, np.eye(6, dtype=np.float32)[int(row['label_idx'])]
 
         result = tf.data.Dataset.from_generator(samples, output_signature=(
             tf.TensorSpec((224, 224, 3), tf.float32), tf.TensorSpec((6,), tf.float32)))
         result = result.apply(tf.data.experimental.assert_cardinality(len(rows)))
-        if split == 'train':
-            result = result.shuffle(min(512, len(rows)), seed=42, reshuffle_each_iteration=True)
         return result.batch(args.batch_size).prefetch(1)
 
     factory = {'efficientnetb0': tf.keras.applications.EfficientNetB0,

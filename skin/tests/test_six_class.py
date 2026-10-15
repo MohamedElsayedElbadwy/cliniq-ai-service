@@ -13,6 +13,17 @@ import pytest
 from PIL import Image
 
 
+def test_epoch_order_mixes_class_sorted_manifest_without_dropping_images():
+    from skin.training.six_class import epoch_order
+    labels = np.repeat(np.arange(6), [805, 615, 696, 548, 450, 647])
+    first = epoch_order(len(labels), 0)
+    assert sorted(first) == list(range(len(labels)))
+    assert set(labels[first[:512]]) == set(range(6))
+    assert set(labels[first[-512:]]) == set(range(6))
+    assert np.array_equal(first, epoch_order(len(labels), 0))
+    assert not np.array_equal(first, epoch_order(len(labels), 1))
+
+
 def make_archive(tmp_path, entries):
     archive = tmp_path / 'source.zip'
     manifest = tmp_path / 'manifest.csv'
