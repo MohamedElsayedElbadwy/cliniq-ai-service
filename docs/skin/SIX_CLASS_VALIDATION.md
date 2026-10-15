@@ -1,4 +1,4 @@
-# Six-class implementation verification — 2026-10-15
+# Six-class implementation verification — updated 2026-10-16
 
 Branch: `feature/skin-six-class`, based on latest fetched `origin/main` at
 `0434192`. Active implementation: `skin.data.prepare_six` and
@@ -79,8 +79,8 @@ copied into the active artifacts directory.
 
 ## Pending work and performance claims
 
-Actual six-class ImageNet GPU training and held-out disease accuracy are **not
-yet measured**. TensorFlow reports no usable GPU on native Windows here; use
+Held-out six-class disease accuracy is **not yet measured**. TensorFlow reports
+no usable GPU on native Windows here; use
 the provided Colab/Kaggle GPU notebook. No active six-class model manifest or
 weights are fabricated, and the old classifier is not loaded by default.
 
@@ -102,3 +102,32 @@ checks complete image coverage, class mixing at both ends of an epoch, and
 repeatable/changing epoch order. A fresh ImageNet run in a new directory uses
 source commit `0a1261057304a8aade474569efc0eac79eca8184`; no interrupted weights
 are resumed. The published notebook pins this corrected source.
+
+## GPU session recovery and review — 2026-10-16
+
+The corrected T4 run completed all eight head epochs and logged fine-tuning
+through epoch 8: validation accuracy **0.8042**, macro-F1 **0.8071**. These are
+validation scores only. The temporary Colab runtime expired during an account
+usage interruption; reconnecting allocated a new machine, and a notebook check
+confirmed the previous workspace and checkpoint were absent. No final model or
+held-out test report was recovered, and none of these scores is presented as
+test accuracy. A fresh run is required on the same frozen protocol.
+
+The notebook now downloads periodic training backups to the local browser.
+Checkpoint weights and JSON metadata are published by atomic replacement;
+backup polling failures cannot terminate healthy training. Manual checks
+verified archive SHA256/incomplete markers, absence of source photographs,
+streamed subprocess output/nonzero propagation, and successful child completion
+despite deliberately malformed backup metadata. A two-stage synthetic B0 smoke
+also completed with atomic checkpoint saves/reload; its scores are not disease
+accuracy.
+
+An independent read-only review found that the generic serving layer could
+accept a manually configured artifact with another class map. It now requires
+the exact six agreed labels in index order, before loading weights. Regression
+cases reject 22 classes, three classes, swapped labels and an unknown label.
+The full suite after that contract fix passed **118 tests**, with one real-model
+test deselected and three upstream warnings (64.32s). The final suite including
+atomic metadata publication also passed **118 tests**, one deselected and three
+warnings (62.63s). The restarted notebook pins atomic-save source commit
+`45ace6fb1c37b9d7defef915cf7e2d33938af69c`.

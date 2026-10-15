@@ -56,6 +56,12 @@ GitHub credentials, local file uploads or MRI LFS weights. After installing the
 pinned dependencies, restart the runtime once if Colab had already imported
 NumPy; this avoids mixing preloaded native NumPy code with newly installed files.
 Then rerun setup and the GPU check. Command output streams into the notebook.
+In Colab the command runner also downloads checkpoint ZIP backups after head
+epochs 1/5/8, every fifth fine-tuning epoch, and successful completion. These
+contain weights and protocol metadata, never source photographs. Keep the
+downloads: temporary Colab storage is lost when a runtime expires. Checkpoint
+backups are explicitly marked incomplete until training ends and are never a
+substitute for the locked held-out evaluation/export.
 
 For manual source transfer from a local checkout, a small source bundle is also available:
 
@@ -145,6 +151,8 @@ restart the service. Legacy artifacts in the parent directory are not loaded by
 default; absent six-class weights mean Skin health is unavailable and prediction
 returns 503, while Voice/MRI continue to start. Model files and source images are
 Git-ignored. No fake model manifest or invented accuracy is shipped.
+Serving rejects any class names or index order other than the agreed six, even
+when an incompatible model is configured manually.
 
 ```powershell
 python -m uvicorn main:app --port 8080
