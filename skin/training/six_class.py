@@ -194,7 +194,9 @@ def train(args):
             print(f'\n{self.stage} validation accuracy={metrics["accuracy"]:.4f} macro-F1={metrics["macroF1"]:.4f}', flush=True)
             if metrics['macroF1'] > self.best + 1e-6:
                 self.best = metrics['macroF1']
-                self.model.save(args.run / 'best.keras')
+                pending = args.run / '.best-saving.keras'
+                self.model.save(pending)
+                os.replace(pending, args.run / 'best.keras')
                 dump_json(args.run / 'validation.json', metrics)
                 np.save(args.run / 'validation_logits.npy', logits)
 

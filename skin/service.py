@@ -9,7 +9,7 @@ import time
 
 import numpy as np
 
-from .config import SkinSettings, get_settings
+from .config import CLASS_NAMES, SkinSettings, get_settings
 from .preprocessing import PREPROCESSING_SPEC, preprocess_skin_image
 from .schemas import DISCLAIMER
 
@@ -56,6 +56,8 @@ class SkinPredictor:
             names=[mapping[str(i)] for i in range(len(mapping))]
             if any(not isinstance(name,str) or not name.strip() for name in names) or len(set(names))!=len(names):
                 raise ValueError('Invalid class labels')
+            if tuple(names)!=CLASS_NAMES:
+                raise ValueError('Incompatible six-class map')
             if raw['inputSize']!=[224,224] or raw['preprocessing']!=PREPROCESSING_SPEC or raw['outputType']!='logits':
                 raise ValueError('Incompatible preprocessing/output')
             self.temperature=float(raw['temperature'])

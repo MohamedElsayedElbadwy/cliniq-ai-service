@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from main import app
-from skin.config import SkinSettings
+from skin.config import CLASS_NAMES, SkinSettings
 from skin.preprocessing import InvalidImageError, decode_image, preprocess_skin_image
 from skin.router import get_skin_service
 from skin.service import SkinPredictor, calibrated_probabilities
@@ -21,10 +21,10 @@ from skin.service import SkinPredictor, calibrated_probabilities
 
 class FakeModel:
     input_shape = (None,224,224,3)
-    output_shape = (None,3)
+    output_shape = (None,6)
 
     def __call__(self, batch, training=False):
-        return np.tile([0.,1.,3.],(len(batch),1))
+        return np.tile([0.,1.,3.,0.,0.,0.],(len(batch),1))
 
 
 def image_bytes(mode='RGB', fmt='PNG', size=(80,100)):
@@ -39,7 +39,7 @@ def artifact(tmp_path):
     model.write_bytes(b'fake artifact for injected model only')
     manifest=tmp_path/'model_manifest.json'
     raw=dict(modelVersion='unit-test',architecture='test',inputSize=[224,224],
-        preprocessing='exif-rgb-direct-resize-float32-0-255-v1',classNames={'0':'A','1':'B','2':'C'},
+        preprocessing='exif-rgb-direct-resize-float32-0-255-v1',classNames={str(i): name for i, name in enumerate(CLASS_NAMES)},
         temperature=1.,abstainThreshold=.5,modelSha256=hashlib.sha256(model.read_bytes()).hexdigest(),outputType='logits')
     manifest.write_text(json.dumps(raw))
     return model,manifest,raw
@@ -62,11 +62,12 @@ def client(predictor):
 
 def test_success_contract_and_health(client):
     health=client.get('/api/ai/skin/health').json()
-    assert health['modelAvailable'] and health['classCount']==3
+    assert health['modelAvailable'] and health['classCount']==6
     response=client.post('/api/ai/skin/predict',files={'file':('skin.png',image_bytes(),'image/png')})
     assert response.status_code==200
     result=response.json()
-    assert result['predictedClass']=='C' and not result['abstained']
+    assert result['predictedClass']=='Psoriasis' and not result['abstained']
+    assert list(result['probabilities']) == list(CLASS_NAMES)
     assert result['modelVersion']=='unit-test'
     assert len(result['topPredictions'])==3
     assert sum(result['probabilities'].values())==pytest.approx(1.)
@@ -150,6 +151,25 @@ def test_manifest_failure_sanitized(artifact,key,value):
     predictor=SkinPredictor(SkinSettings(model_path=model,manifest_path=manifest),model_loader=lambda _:FakeModel())
     assert not predictor.is_ready
     assert str(model.parent) not in predictor.unavailable_message
+
+
+@pytest.mark.parametrize('names', [
+    ['old-' + str(i) for i in range(22)],
+    ['Acne', 'Eczema', 'Psoriasis'],
+    ['Eczema', 'Acne', 'Psoriasis', 'Rosacea', 'Ringworm', 'Normal'],
+    ['Acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'Other'],
+])
+def test_serving_rejects_incompatible_class_map_before_loading_weights(artifact, names):
+    model, manifest, raw = artifact
+    raw['classNames'] = {str(i): name for i, name in enumerate(names)}
+    manifest.write_text(json.dumps(raw))
+    loaded = []
+    def loader(path):
+        loaded.append(path)
+        return FakeModel()
+    predictor = SkinPredictor(SkinSettings(model_path=model, manifest_path=manifest), model_loader=loader)
+    assert not predictor.is_ready
+    assert loaded == []
 
 
 def test_model_shape_mismatch_and_bad_inference(artifact,predictor):

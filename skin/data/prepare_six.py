@@ -16,6 +16,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path, PurePosixPath
 
+from skin.config import CLASS_NAMES
 from .inspect_dataset import assign_splits, find_clusters, inspect_image, write_csv
 
 DATASET_ID = 'Cuebot/skin-assessment-13-class-filtered'
@@ -23,7 +24,6 @@ REVISION = '41c48b0b0a3b9f36e645db494a0563f7cc770ebd'
 ARCHIVE_NAME = 'skin-assessment-13-classes.zip'
 ARCHIVE_SHA256 = 'd0c5d8019d960ceccabf7dcf1dddf66ebacc0c1d7393b7340b0dbdee6b5259b1'
 MANIFEST_SHA256 = '1105026c7d9b1af8939862de7e5783d883f910af94410e8bf0c436cf9da529d4'
-CLASS_NAMES = ('Acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'Normal')
 SOURCE_LABELS = dict(zip(('acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'normal'), CLASS_NAMES))
 RIGHTS_NOTE = ('Research/technical evaluation only. Inherited folder labels are not independently '
               'clinically verified. Source Kaggle CC0 declaration does not verify upstream image '
@@ -38,7 +38,9 @@ def sha256(path):
 def dump_json(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')
+    pending = path.with_name('.' + path.name + '.tmp')
+    pending.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')
+    pending.replace(path)
 
 
 def download(cache):

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ARTIFACTS_DIR=Path(__file__).resolve().parent/'artifacts'/'six-class'
+CLASS_NAMES=('Acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'Normal')
 
 
 @dataclass(frozen=True)
