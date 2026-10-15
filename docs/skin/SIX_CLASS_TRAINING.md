@@ -51,15 +51,22 @@ dependencies with the same TensorFlow/Keras versions as ClinIQ. It checks GPU
 availability and stops if unavailable. A runtime restart may be needed if the
 notebook environment previously imported different TensorFlow/NumPy versions.
 
-For a local checkout, build the small source bundle:
+The setup cell downloads the verified public source commit directly, without
+GitHub credentials, local file uploads or MRI LFS weights. After installing the
+pinned dependencies, restart the runtime once if Colab had already imported
+NumPy; this avoids mixing preloaded native NumPy code with newly installed files.
+Then rerun setup and the GPU check. Command output streams into the notebook.
+
+For manual source transfer from a local checkout, a small source bundle is also available:
 
 ```powershell
 python scripts/package_skin_six.py
 ```
 
-Upload `skin-six-source.zip` and `skin/training/skin_six_colab.ipynb` to Colab.
-On Kaggle, add the ZIP as a private notebook input; use the same notebook cells.
-No code push, credentials, images or previous weights are needed in the bundle.
+Open `skin/training/skin_six_colab.ipynb` from the feature branch in Colab, or
+import it into Kaggle with Internet and GPU enabled. No source ZIP upload is
+required by the default notebook. The optional ZIP contains only source/docs;
+unpack it and use the CLI commands below when working outside the notebook.
 The dataset ZIP download is approximately 903 MiB; preparation extracts only the
 six original-image classes. Use persistent storage or download results before
 the GPU session ends.

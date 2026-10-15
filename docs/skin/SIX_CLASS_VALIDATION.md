@@ -80,7 +80,8 @@ weights are fabricated, and the old classifier is not loaded by default.
 The 85% accuracy / 0.85 macro-F1 / 0.70 minimum per-class recall gate is an
 engineering target only. Synthetic smoke-test scores are not disease-classifier
 performance evidence. The verified source branch is published to origin as
-`feature/skin-six-class`. Final GPU evaluation, artifact delivery and a draft PR
-remain pending. The connected GitHub account cannot create the PR because it is
-not a collaborator; the browser is signed out. A collaborator account can open
-[the prepared branch comparison](https://github.com/MohamedElsayedElbadwy/cliniq-ai-service/compare/main...feature/skin-six-class?expand=1).
+`feature/skin-six-class`. [Draft PR #9](https://github.com/MohamedElsayedElbadwy/cliniq-ai-service/pull/9)
+was created through the owner's signed-in browser session. A private Colab copy
+now has a T4 GPU, with TensorFlow 2.21.0/Keras 3.15.1 GPU discovery verified after
+restarting the kernel to clear preloaded NumPy. Actual GPU training, final
+held-out evaluation and artifact delivery are in progress; no accuracy is claimed yet.
