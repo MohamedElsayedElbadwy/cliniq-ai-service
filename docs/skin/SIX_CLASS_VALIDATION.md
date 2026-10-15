@@ -144,5 +144,29 @@ available. Its six-output Keras graph reproduced a known asymmetric fixture's
 exact two-view mean after safe-mode save/reload. The full suite with locked-test
 and ineligible-source regressions passed **120 tests**, one deselected and three
 upstream warnings (11.96s). Independent read-only review found no actionable
-issue in this candidate path. Disease-accuracy benefit remains unmeasured until
-the trained source model is compared on validation; no test images are used.
+issue in this candidate path.
+
+## Completed replacement GPU run — 2026-10-16
+
+The replacement T4 run used source `45ace6fb1c37b9d7defef915cf7e2d33938af69c`,
+fresh ImageNet weights, and the same verified portable split hashes. It completed
+eight frozen-head epochs and 17 fine-tuning epochs, stopping after five epochs
+without an improvement in validation macro-F1. The best checkpoint was selected
+at fine-tuning epoch 12 and reproduced its validation metrics after reload:
+**accuracy 0.83023544, macro-F1 0.83226249 on all 807 validation images**.
+Checkpoint SHA256:
+`1bbdfb2aec3c312a80cf580ca6095c1279227786e1b5046c8f3bd04906a57a1c`.
+
+The optional original/mirror candidate was built and reloaded with source
+`f44cf6c79e994f31b1764c96c8b9b2da79061fd6`. On the same validation images it
+measured **accuracy 0.83271375, macro-F1 0.83545463**. Its checkpoint SHA256 is
+`333593ce7099aaa79b5abeed364dce9d5001f7b5b32db80c8a05750e4e3a6331`.
+Eczema validation recall remains 0.68786, so the improvement does not establish
+that the engineering targets will pass. A fresh B0 comparison is planned before
+freezing model selection. These are validation results, not held-out test scores.
+
+Automatic browser downloads did not all reach disk. The first head-epoch ZIP
+was recovered locally and its model checksum, six-class map, pinned provenance
+and all split checksums were verified. That checkpoint is incomplete and is not
+installed. Completed B2 and mirror weights still require a verified durable
+transfer; a disappearing download progress bar is not treated as delivery.
