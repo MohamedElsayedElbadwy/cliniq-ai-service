@@ -79,6 +79,9 @@ layers are fine-tuned at a low learning rate with BatchNorm frozen. Horizontal
 flips, modest rotation/zoom/contrast run only during training. Training-only
 class weights, dropout, label smoothing, reduced learning rate and early stopping
 limit imbalance and overfitting. Selection always uses validation macro-F1.
+Every training epoch globally shuffles row indexes before decoding images,
+avoiding class blocks from the sorted manifests without buffering all decoded
+photographs in memory. Validation/test retain their frozen manifest order.
 
 Implementation follows the official Keras
 [transfer-learning guide](https://keras.io/guides/transfer_learning/) and

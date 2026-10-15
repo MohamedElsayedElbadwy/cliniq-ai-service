@@ -38,6 +38,12 @@ Aggregate provenance and frozen split checksums: [six_class_dataset.json](six_cl
 No real test image has been used for model training, selection or prediction.
 Patient independence remains unverified because patient IDs are unavailable.
 
+Seeded training-only contact sheets were inspected locally for Normal and
+Psoriasis (20 images each). Normal includes selfies and cosmetic/stock-style
+photographs; Psoriasis includes source watermarks. These create opportunities
+for background/source shortcuts. This small visual audit does not validate
+diagnoses, and no clinical photographs or contact sheets were published.
+
 ## Executed code/integration checks
 
 Isolated workspace environment: Python 3.12.14, TensorFlow 2.21.0, Keras 3.15.1,
@@ -48,6 +54,7 @@ NumPy 2.5.3, Pillow 12.3.0, Starlette 1.7.0. Runtime dependency pins were preser
 | New data/protocol tests before implementation | Failed for missing implementation; path/checksum/isolation regressions subsequently passed |
 | Default config tests before changing the active artifact location | 2 failures, then passed with six-class defaults |
 | Final full shared working-tree suite: `.venv-skin-six/Scripts/python.exe -m pytest -v --basetemp .test-tmp/six-final-suite` | **113 passed, 1 real-model test deselected, 3 upstream deprecation warnings; 15.14s** |
+| Full suite after replacing bounded image-buffer shuffle with global index shuffle | **114 passed, 1 deselected, 3 warnings; 81.96s**; diagnostic repeat also passed in 24.00s |
 | Exact staged source exported to an isolated clean copy; full `python -m pytest -v` run from inside that copy | **106 passed, 1 deselected, 3 warnings; 6.51s**; no legacy training scripts/data needed |
 | Two-stage EfficientNetB0 CPU smoke on 72 synthetic random images, one epoch per stage | Both stages completed; selected `.keras` checkpoint saved/reloaded and validation selection reproduced |
 | Separate tiny synthetic model through finalization and the actual `SkinPredictor` | Six output labels/probabilities verified; deliberately weak classifier failed the default quality gate, exited nonzero, and retained reports/artifact for inspection |
@@ -85,3 +92,13 @@ was created through the owner's signed-in browser session. A private Colab copy
 now has a T4 GPU, with TensorFlow 2.21.0/Keras 3.15.1 GPU discovery verified after
 restarting the kernel to clear preloaded NumPy. Actual GPU training, final
 held-out evaluation and artifact delivery are in progress; no accuracy is claimed yet.
+
+The first GPU run was interrupted before fine-tuning because inspection showed
+the frozen train CSV was class-sorted and its 512-image shuffle buffer could not
+mix whole-class blocks. No test prediction was made. The corrected sampler
+globally permutes lightweight row indexes before image decoding, once per epoch,
+using a reproducible seed; validation/test order is unchanged. A regression test
+checks complete image coverage, class mixing at both ends of an epoch, and
+repeatable/changing epoch order. A fresh ImageNet run in a new directory uses
+source commit `0a1261057304a8aade474569efc0eac79eca8184`; no interrupted weights
+are resumed. The published notebook pins this corrected source.
