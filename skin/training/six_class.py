@@ -230,6 +230,56 @@ def train(args):
     print(json.dumps(validation, indent=2), flush=True)
 
 
+def build_flip_average(tf, base):
+    """Built-in serializable operations; the service still loads one Keras model."""
+    if tuple(base.input_shape[1:]) != (224, 224, 3) or base.output_shape[-1] != 6:
+        raise ValueError('Two-view candidate requires the six-class input/output contract')
+    inputs = tf.keras.Input((224, 224, 3), dtype='float32')
+    logits = tf.keras.layers.Average(name='two_view_logits')([
+        base(inputs, training=False),
+        base(tf.keras.ops.flip(inputs, axis=2), training=False),
+    ])
+    return tf.keras.Model(inputs, logits, name='skin_six_flip_average')
+
+
+def make_flip_candidate(args):
+    """Compare two-view logits using validation only, before the test lock."""
+    if (Path(args.workspace) / 'finalization_lock.json').exists():
+        raise ValueError('Test protocol is locked; no further inference selection')
+    protocol = load_protocol(args.workspace)
+    config = json.loads((args.source_run / 'train_config.json').read_text())
+    completed = json.loads((args.source_run / 'completed.json').read_text())
+    if (not config.get('productionEligible') or not protocol['provenance']['officialArchiveVerified']
+            or config.get('classCount') != 6 or config.get('classNames') != protocol['names']
+            or config['splitFileSha256s'] != protocol['provenance']['splitFileSha256s']):
+        raise ValueError('Candidate source must be a completed eligible six-class run on this protocol')
+    source = args.source_run / 'best.keras'
+    if sha256(source) != completed['modelSha256']:
+        raise ValueError('Candidate source checkpoint changed since completion')
+    if config.get('inferenceViews', 1) != 1:
+        raise ValueError('Do not nest inference candidates')
+    config = dict(config, architecture=config['architecture'] + '-flip-average', inferenceViews=2,
+                  sourceModelSha256=completed['modelSha256'],
+                  inferenceVariant='mean logits of original and horizontal mirror; validation selection only')
+    create_run(args.run, config)
+    tf = configure_tensorflow(require_gpu=False)
+    base = tf.keras.models.load_model(source, compile=False, safe_mode=True)
+    candidate = build_flip_average(tf, base)
+    candidate.save(args.run / 'best.keras')
+    reloaded = tf.keras.models.load_model(args.run / 'best.keras', compile=False, safe_mode=True)
+    logits = predict_split(reloaded, protocol, 'val', args.batch_size)
+    labels = np.array([int(row['label_idx']) for row in protocol['rows']['val']])
+    validation = classification_metrics(labels, logits, protocol['names'])
+    dump_json(args.run / 'validation.json', validation)
+    np.save(args.run / 'validation_logits.npy', logits)
+    if (args.source_run / 'history.json').exists():
+        shutil.copy2(args.source_run / 'history.json', args.run / 'history.json')
+    dump_json(args.run / 'completed.json', dict(modelSha256=sha256(args.run / 'best.keras'),
+        validation=validation, testImagesRead=False, sourceModelSha256=completed['modelSha256']))
+    print(json.dumps(dict(baseline=completed['validation'], flipAverage=validation,
+                         selectedByValidation=validation['macroF1'] > completed['validation']['macroF1']), indent=2), flush=True)
+
+
 def finalize(args):
     protocol = load_protocol(args.workspace)
     config = json.loads((args.run / 'train_config.json').read_text())
@@ -323,6 +373,11 @@ def main():
     train_parser.add_argument('--head-epochs', type=int, default=8)
     train_parser.add_argument('--finetune-epochs', type=int, default=25)
     train_parser.add_argument('--allow-cpu', action='store_true', help='Synthetic offline smoke test only; random weights; export disabled')
+    flip_parser = commands.add_parser('flip-candidate', help='Validation-only two-view inference comparison before finalization')
+    flip_parser.add_argument('--workspace', type=Path, required=True)
+    flip_parser.add_argument('--source-run', type=Path, required=True)
+    flip_parser.add_argument('--run', type=Path, required=True)
+    flip_parser.add_argument('--batch-size', type=int, default=24)
     final_parser = commands.add_parser('finalize')
     final_parser.add_argument('--workspace', type=Path, required=True)
     final_parser.add_argument('--run', type=Path, required=True)
@@ -338,6 +393,8 @@ def main():
         if args.head_epochs < 1 or args.finetune_epochs < 1:
             parser.error('Both training stages require at least one epoch')
         train(args)
+    elif args.command == 'flip-candidate':
+        make_flip_candidate(args)
     else:
         if any(not 0 <= value <= 1 for value in (args.min_accuracy, args.min_macro_f1, args.min_recall)):
             parser.error('Quality thresholds must be between zero and one')

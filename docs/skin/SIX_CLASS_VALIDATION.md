@@ -131,3 +131,18 @@ test deselected and three upstream warnings (64.32s). The final suite including
 atomic metadata publication also passed **118 tests**, one deselected and three
 warnings (62.63s). The restarted notebook pins atomic-save source commit
 `45ace6fb1c37b9d7defef915cf7e2d33938af69c`.
+
+During the restarted run, the first epoch reproduced validation accuracy
+0.6171/macro-F1 0.6115 and created its checkpoint archive. Colab displayed a
+download progress bar, but the transfer remained pending while the foreground
+kernel was occupied. No local backup is claimed until the ZIP actually reaches
+disk and its embedded model checksum is verified. This limitation is documented
+in the training guide; periodic archive creation alone is not durable storage.
+
+An optional validation-only original/mirror logits-average candidate is also
+available. Its six-output Keras graph reproduced a known asymmetric fixture's
+exact two-view mean after safe-mode save/reload. The full suite with locked-test
+and ineligible-source regressions passed **120 tests**, one deselected and three
+upstream warnings (11.96s). Independent read-only review found no actionable
+issue in this candidate path. Disease-accuracy benefit remains unmeasured until
+the trained source model is compared on validation; no test images are used.

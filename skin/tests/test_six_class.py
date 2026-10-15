@@ -24,6 +24,37 @@ def test_epoch_order_mixes_class_sorted_manifest_without_dropping_images():
     assert not np.array_equal(first, epoch_order(len(labels), 1))
 
 
+def test_flip_candidate_cannot_bypass_locked_test_protocol(tmp_path):
+    from skin.training.six_class import make_flip_candidate
+    workspace = tmp_path / 'workspace'
+    workspace.mkdir()
+    (workspace / 'finalization_lock.json').write_text('{}')
+    args = SimpleNamespace(workspace=workspace, source_run=tmp_path / 'missing', run=tmp_path / 'new')
+    with pytest.raises(ValueError, match='locked'):
+        make_flip_candidate(args)
+    assert not args.run.exists()
+
+
+def test_flip_candidate_rejects_synthetic_source_before_loading_weights(tmp_path):
+    from skin.data.prepare_six import prepare
+    from skin.training.six_class import make_flip_candidate
+    archive, manifest = make_archive(tmp_path, [
+        (f'{label}/{i}.png', png(100 * k + i))
+        for k, label in enumerate(['acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'normal'])
+        for i in range(6)
+    ])
+    workspace = tmp_path / 'workspace'
+    prepare(archive, manifest, workspace)
+    source = tmp_path / 'source'
+    source.mkdir()
+    (source / 'train_config.json').write_text(json.dumps(dict(productionEligible=False)))
+    (source / 'completed.json').write_text('{}')
+    args = SimpleNamespace(workspace=workspace, source_run=source, run=tmp_path / 'candidate')
+    with pytest.raises(ValueError, match='eligible six-class'):
+        make_flip_candidate(args)
+    assert not args.run.exists()
+
+
 def make_archive(tmp_path, entries):
     archive = tmp_path / 'source.zip'
     manifest = tmp_path / 'manifest.csv'

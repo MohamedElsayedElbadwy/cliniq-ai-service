@@ -62,6 +62,12 @@ contain weights and protocol metadata, never source photographs. Keep the
 downloads: temporary Colab storage is lost when a runtime expires. Checkpoint
 backups are explicitly marked incomplete until training ends and are never a
 substitute for the locked held-out evaluation/export.
+Colab transfers these downloads through kernel comm messages. During the
+foreground training cell the download can remain queued until the kernel is
+idle; a visible download progress bar alone does not establish a local backup.
+Verify the downloaded ZIP on disk. These snapshots do not guarantee recovery
+from an expired runtime before transfer; persistent storage is still needed for
+that guarantee.
 
 For manual source transfer from a local checkout, a small source bundle is also available:
 
@@ -105,6 +111,10 @@ python -m skin.training.six_class train --workspace workspaces/skin-six \
 # Optional B0 comparison, BEFORE finalization; choose by validation.json only:
 python -m skin.training.six_class train --workspace workspaces/skin-six \
   --run workspaces/skin-six/runs/b0 --architecture efficientnetb0
+# Optional validation-only original/mirror average, BEFORE the test lock:
+python -m skin.training.six_class flip-candidate --workspace workspaces/skin-six \
+  --source-run workspaces/skin-six/runs/b2 --run workspaces/skin-six/runs/b2-flip
+# Compare validation.json; finalize only the selected candidate.
 python -m skin.training.six_class finalize --workspace workspaces/skin-six \
   --run workspaces/skin-six/runs/b2 --output workspaces/skin-six/export
 ```
@@ -131,6 +141,16 @@ and an optional low-confidence abstention threshold use validation only. Primary
 test accuracy and macro-F1 include **all** test images; abstention accuracy is
 reported separately with coverage. The exported `evaluation.json` includes the
 confusion matrix and every class's precision, recall, F1 and support.
+
+`flip-candidate` optionally wraps a completed eligible six-class model in one
+serializable Keras graph that averages original/mirrored logits. It uses the
+built-in [Keras flip operation](https://keras.io/api/ops/numpy/#flip-function),
+with shared weights and inference mode for both views; no custom/Lambda layer
+is needed. It reads validation images only, writes a new protected run directory,
+and refuses a locked test protocol, smoke-test source or nested two-view model.
+Compare validation macro-F1 against the original before selecting it. This
+doubles forward passes, so accuracy benefit and serving latency must be measured;
+neither improvement nor clinical validity is assumed.
 
 No real six-class model accuracy is claimed until GPU training and this held-out
 evaluation have actually run. Technical unit/smoke-test results are not model
