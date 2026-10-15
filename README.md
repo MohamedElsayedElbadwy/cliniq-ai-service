@@ -73,16 +73,38 @@ threshold, 1 when the predictor is unavailable, 2 for invalid input, and 3 when 
 mapping differs or accuracy is below the threshold. Low accuracy spread across all
 classes usually points to a preprocessing mismatch, not a class-order problem.
 
-## Architecture
+## Skin API
+
+The optional Skin module uses the same central application:
+
+- `GET /api/ai/skin/health` reports `status`, `modelAvailable`, `message`, `modelVersion`, and `classCount`.
+- `POST /api/ai/skin/predict` accepts multipart `file` in JPEG/PNG with matching extension/content, up to 5 MiB and 20 million decoded pixels.
+- Returns `predictedClass` (null when abstained), calibrated `confidence`, `abstained`, `abstainReason`, `topPredictions`, all-class `probabilities`, `modelVersion`, `inferenceMs`, and `disclaimer`.
+
+The active project trains **Acne, Eczema, Psoriasis, Rosacea, Ringworm and Normal** from the pinned [Skin Assessment dataset](https://huggingface.co/datasets/Cuebot/skin-assessment-13-class-filtered). It starts a new ImageNet transfer-learning run and does not reuse old Skin data, weights, splits or metrics. See [six-class training instructions](docs/skin/SIX_CLASS_TRAINING.md) and [Colab/Kaggle GPU notebook](skin/training/skin_six_colab.ipynb).
+
+Run `python scripts/package_skin_six.py` to create the source ZIP used by the notebook. Dataset preparation excludes supplied `aug_*` images before grouped duplicate-safe splitting. Training uses class weights, augmentation on training images only and two-stage fine-tuning; model selection uses validation macro-F1. Finalization locks the chosen model, evaluates the untouched test split and exports the actual accuracy, per-class metrics, confusion matrix and artifact metadata. The default 85% accuracy/0.85 macro-F1 target is not a measured result or a promise.
+
+Place the newly exported `skin_six.keras`, matching `model_manifest.json` and numeric `class_names.json` in `skin/artifacts/six-class/`, or set `SKIN_MODEL_PATH` and `SKIN_MANIFEST_PATH`. Legacy weights in the parent artifacts directory are not loaded by default. The manifest validates the model SHA256, preprocessing and class count. Model weights are ignored by Git; deliver them on a local/shared volume and restart. Missing/bad artifacts report not-ready and prediction HTTP 503 without blocking Voice or MRI. Six-class model readiness and measured accuracy require an actual completed GPU training/export run.
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8080/api/ai/skin/predict `
+  -F "file=@C:\path\to\skin.jpg;type=image/jpeg"
+```
+
+This is a research prototype, not a medical diagnosis or validated medical device. Confidence is a model score, not diagnostic correctness. `Normal` is a dataset label, not proof of healthy skin. External clinical generalization, patient independence and demographic fairness are not validated. Source labels and upstream image rights are not independently verified. Skin uploads remain in memory and are not logged or persisted; the multipart body is bounded before parsing. New GPU training dependencies are isolated in `skin/training/requirements-cloud.txt`; historical documents/reports refer to the earlier experiment and do not describe six-class performance.
+
+## Architecture (voice / mri / skin)
 
 ```text
 Flutter / .NET services -> ClinIQ AI Service (FastAPI)
                                       -> voice
                                       -> mri
+                                      -> skin
                                       -> future RAG
 ```
 
-`main.py` owns each module prefix and initializes the cached MRI predictor during app
+`main.py` owns each module prefix and initializes the optional cached MRI/Skin predictors during app
 startup. Future AI modules can be mounted there without changing the Voice Call API.
 
 ## Tests
@@ -91,5 +113,5 @@ startup. Future AI modules can be mounted there without changing the Voice Call 
 python -m pytest -v
 ```
 
-Tests mock Groq and the MRI model; they do not require model weights or send requests to
+Tests mock Groq and MRI/Skin inference; they do not require model weights or send requests to
 external services.
