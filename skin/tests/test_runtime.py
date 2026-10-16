@@ -99,6 +99,60 @@ def test_size_pixel_caps_and_form_field(client,monkeypatch):
     assert client.post('/api/ai/skin/predict',files={'image':('a.png',image_bytes(),'image/png')}).status_code==422
 
 
+@pytest.mark.parametrize('size,fmt',[
+    ((6000,4000),'JPEG'),((4000,6000),'JPEG'),((20000,1200),'JPEG'),
+    ((12000,9000),'JPEG'),((6000,4000),'PNG')])
+def test_high_resolution_photos_are_resized_for_inference(client,predictor,size,fmt):
+    received=[]
+    class Capture(FakeModel):
+        def __call__(self,batch,training=False):
+            received.append((batch.shape,batch.dtype))
+            return super().__call__(batch,training=training)
+    predictor.model=Capture()
+    payload=image_bytes(mode='L',fmt=fmt,size=size)
+    assert len(payload)<10*1024*1024
+    name,mime=('large.jpg','image/jpeg') if fmt=='JPEG' else ('large.png','image/png')
+    response=client.post('/api/ai/skin/predict',files={'file':(name,payload,mime)})
+    assert response.status_code==200,response.text
+    assert received==[((1,224,224,3),np.dtype('float32'))]
+
+
+def test_configured_pixel_limit_replaces_pillow_warning_threshold(client,monkeypatch):
+    # A low Pillow warning threshold reproduces a >89 MP image without huge allocation.
+    payload=image_bytes(size=(100,100))
+    monkeypatch.setattr(Image,'MAX_IMAGE_PIXELS',6000)
+    response=client.post('/api/ai/skin/predict',files={'file':('skin.png',payload,'image/png')})
+    assert response.status_code==200,response.text
+    # The library-wide protection remains intact outside this bounded decoder.
+    with pytest.warns(Image.DecompressionBombWarning):
+        with Image.open(io.BytesIO(payload)):
+            pass
+    monkeypatch.setenv('SKIN_MAX_PIXELS','9000')
+    response=client.post('/api/ai/skin/predict',files={'file':('skin.png',payload,'image/png')})
+    assert response.status_code==413
+    assert '9000 pixels' in response.json()['detail']
+
+
+def test_image_above_120_megapixels_is_rejected_with_limit(client):
+    payload=image_bytes(mode='L',fmt='PNG',size=(12001,10000))
+    response=client.post('/api/ai/skin/predict',files={'file':('too-large.png',payload,'image/png')})
+    assert response.status_code==413
+    assert '120 megapixels' in response.json()['detail']
+
+
+def test_upload_is_decoded_once_before_inference(client,monkeypatch):
+    payload=image_bytes()
+    original=Image.open
+    opened=[]
+    def track(*args,**kwargs):
+        opened.append(1)
+        return original(*args,**kwargs)
+    monkeypatch.setattr(Image,'open',track)
+    response=client.post('/api/ai/skin/predict',files={'file':('skin.png',payload,'image/png')})
+    assert response.status_code==200
+    assert len(opened)==1
+
+
 def test_missing_skin_does_not_break_app(tmp_path,monkeypatch):
     import skin.service as service
     monkeypatch.setenv('SKIN_MODEL_PATH',str(tmp_path/'missing.keras'))

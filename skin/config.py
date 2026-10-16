@@ -8,6 +8,7 @@ from pathlib import Path
 ARTIFACTS_DIR=Path(__file__).resolve().parent/'artifacts'/'six-class'
 CLASS_NAMES=('Acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'Normal')
 DEFAULT_MAX_UPLOAD_BYTES=10*1024*1024
+DEFAULT_MAX_PIXELS=120_000_000
 
 
 @dataclass(frozen=True)
@@ -15,7 +16,7 @@ class SkinSettings:
     model_path: Path=ARTIFACTS_DIR/'skin_six.keras'
     manifest_path: Path=ARTIFACTS_DIR/'model_manifest.json'
     max_upload_bytes: int=DEFAULT_MAX_UPLOAD_BYTES
-    max_pixels: int=20_000_000
+    max_pixels: int=DEFAULT_MAX_PIXELS
     top_k: int=3
     abstain_threshold: float | None=None
 
@@ -26,7 +27,7 @@ def get_settings() -> SkinSettings:
         model_path=model,
         manifest_path=Path(os.getenv('SKIN_MANIFEST_PATH') or str(model.parent/'model_manifest.json')).expanduser(),
         max_upload_bytes=int(os.getenv('SKIN_MAX_UPLOAD_BYTES',str(DEFAULT_MAX_UPLOAD_BYTES))),
-        max_pixels=int(os.getenv('SKIN_MAX_PIXELS','20000000')),
+        max_pixels=int(os.getenv('SKIN_MAX_PIXELS',str(DEFAULT_MAX_PIXELS))),
         top_k=int(os.getenv('SKIN_TOP_K','3')),
         abstain_threshold=float(os.environ['SKIN_ABSTAIN_THRESHOLD']) if os.getenv('SKIN_ABSTAIN_THRESHOLD') else None)
     if settings.max_upload_bytes<=0 or settings.max_pixels<=0 or settings.top_k<=0:

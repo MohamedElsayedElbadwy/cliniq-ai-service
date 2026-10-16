@@ -285,3 +285,36 @@ within 0.000000638. The full shared suite after the audit passed **124 tests,
 no skipped/deselected tests, three upstream warnings (51.95s)**. External test
 images, case-level predictions and the six-image manual-testing ZIP remain
 in the ignored local workspace; only aggregate results are tracked.
+
+## Approved high-resolution upload support (2026-10-16)
+
+After explicit approval, the default Skin pixel limit was raised to
+120,000,000 original pixels while retaining the 10 MiB file cap. JPEG/PNG
+images of different aspect ratios still use EXIF correction, RGB conversion
+and the same direct bilinear resize to 224 by 224 float32 [0,255]. The
+preprocessing specification, model artifact and response schema are unchanged.
+Each request is decoded once inside the existing asynchronous inference queue;
+the per-request configured pixel limit is passed into that single decode.
+An unnecessary full-resolution RGB copy was removed and the decoded image is
+closed after resizing. The configured dimension cap is checked before loading
+pixels. Pillow's lower warning threshold is handled locally; its global
+settings and hard-error protection are retained.
+
+Regression tests first reproduced rejected large JPEG/PNG uploads and duplicate
+decoding. Nine focused checks then passed, including portrait, landscape,
+panoramic, 108 MP JPEG and large PNG inputs; custom limits and above-cap errors
+were also verified. The full shared suite, including the actual model marker,
+passed **132 tests, no skipped/deselected tests, three upstream warnings (25.87s)**.
+
+Live central-API checks using the real model accepted synthetic 12000 by 10000
+JPEG (exactly 120 MP), 3000 by 8000 PNG and 20000 by 1200 JPEG inputs with HTTP
+200 and normalized six-class scores. These synthetic images verify ingestion,
+not accuracy. An image of 12001 by 10000 pixels returned 413 with the 120 MP
+limit; a file above 10 MiB returned 413 with the file cap. Root, Swagger,
+OpenAPI and MRI health returned 200; Skin remained ready. Swagger visibly
+displayed the 120 MP/10 MiB defaults and internal resizing behavior.
+
+A fresh 30-image API parity audit (five fixed validation images per class)
+still matched saved evaluation probabilities within 0.000000638. No external
+test score was retuned, and no improvement in classification accuracy is
+claimed. The central local server was left running on port 8080.

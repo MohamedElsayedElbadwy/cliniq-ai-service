@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 
 from .config import get_settings
-from .preprocessing import ImageTooLargeError, InvalidImageError, decode_image
+from .preprocessing import ImageTooLargeError, InvalidImageError
 from .schemas import SkinErrorResponse, SkinHealthResponse, SkinPredictionResponse
 from .service import ModelInferenceError, ModelUnavailableError, SkinPredictor, get_skin_predictor
 from .upload import SkinRoute, upload_size_message
@@ -43,12 +43,12 @@ def health_check(predictor: Annotated[SkinPredictor,Depends(get_skin_service)]):
 
 @router.post('/predict',response_model=SkinPredictionResponse,response_model_by_alias=True,responses={
     400:{'model':SkinErrorResponse,'description':'Empty, invalid or undecodable image upload.'},
-    413:{'model':SkinErrorResponse,'description':'Upload exceeds the configured file size limit (default 10 MiB), multipart body limit, or decoded pixel limit (default 20 million pixels).'},
+    413:{'model':SkinErrorResponse,'description':'Upload exceeds the configured file size limit (default 10 MiB), multipart body limit, or decoded pixel limit (default 120 million pixels).'},
     415:{'model':SkinErrorResponse,'description':'Unsupported image type or extension/content mismatch.'},
     500:{'model':SkinErrorResponse,'description':'Skin model inference failed.'},
     503:{'model':SkinErrorResponse,'description':'Skin model unavailable or configuration invalid.'},
 })
-async def predict_image(file: Annotated[UploadFile,File(description='Skin photograph in JPG, JPEG or PNG; default limits: 10 MiB and 20 million pixels. Prototype, not a medical diagnosis.')],
+async def predict_image(file: Annotated[UploadFile,File(description='Skin photograph in JPG, JPEG or PNG; any aspect ratio, resized internally to 224 x 224. Default limits: 10 MiB and 120 million pixels. Prototype, not a medical diagnosis.')],
                         predictor: Annotated[SkinPredictor,Depends(get_skin_service)]):
     request_id=uuid.uuid4().hex
     started=time.perf_counter()
@@ -82,8 +82,7 @@ async def predict_image(file: Annotated[UploadFile,File(description='Skin photog
         try:
             # Queue asynchronously; never occupy shared threadpool workers waiting.
             async with _request_limiter():
-                await run_in_threadpool(decode_image,payload,settings.max_pixels)
-                result=await run_in_threadpool(predictor.predict_bytes,payload)
+                result=await run_in_threadpool(predictor.predict_bytes,payload,max_pixels=settings.max_pixels)
         except ImageTooLargeError as error:
             raise HTTPException(413,str(error)) from error
         except InvalidImageError as error:

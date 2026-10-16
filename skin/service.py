@@ -94,10 +94,10 @@ class SkinPredictor:
     def unavailable_message(self):
         return self.load_error or 'Skin model is unavailable.'
 
-    def predict_bytes(self,payload):
+    def predict_bytes(self,payload,*,max_pixels=None):
         if not self.is_ready:
             raise ModelUnavailableError(self.unavailable_message)
-        tensor=preprocess_skin_image(payload,max_pixels=self.settings.max_pixels)
+        tensor=preprocess_skin_image(payload,max_pixels=self.settings.max_pixels if max_pixels is None else max_pixels)
         started=time.perf_counter()
         try:
             with self._semaphore:
