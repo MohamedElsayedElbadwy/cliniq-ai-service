@@ -160,8 +160,11 @@ images and split protocol differ.
 The completed 2026-10-16 experiment measured **82.96% accuracy and 0.8323
 macro-F1 on all 804 test images**; every class exceeded 0.70 recall, but the
 overall quality gate failed. See [the measured model card](SIX_CLASS_MODEL_CARD.md).
-The evaluated research export is retained separately from default active
-artifacts. For an explicit local research preview, point the central app at it:
+The evaluated export is retained. After reviewing the measured failed gate, the
+requester explicitly approved copying the exact artifact into the local default
+directory for educational use. The quality gate remains false and no clinical
+deployment is approved. Weights remain outside Git. To preview an export in a
+separate checkout, point the same central app at it:
 
 ```powershell
 $env:SKIN_MODEL_PATH = (Resolve-Path 'workspaces/skin-six-v1/export/skin_six.keras').Path

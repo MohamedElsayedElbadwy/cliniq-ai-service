@@ -30,6 +30,11 @@ The export includes the Keras model, exact six-label map, manifest, actual evalu
 
 ## Limits
 
+After reviewing the measured failed quality gate and live API preview, the
+requester explicitly approved local default activation for educational use.
+The artifact's measured quality gate remains false. Weights remain outside Git;
+the local activation record does not constitute clinical deployment approval.
+
 Research prototype only. Diagnoses and upstream photograph rights were not independently verified. Patient IDs are unavailable; grouped image deduplication does not establish patient independence. No external-site, demographic or clinical validation was performed. Normal is an inherited dataset label. Training-only inspection found stock/selfie imagery and watermarks, which permit source shortcuts.
 
 [Full aggregate metrics and confusion matrix](six_class_evaluation.json).

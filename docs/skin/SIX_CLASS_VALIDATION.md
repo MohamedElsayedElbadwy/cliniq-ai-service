@@ -90,8 +90,13 @@ the recall target. Full results and limits are recorded in
 The artifact was exported and reloaded successfully by the real `SkinPredictor`.
 It is retained under the ignored `workspaces/skin-six-v1/export/` directory as a
 research prototype, with a private Drive copy of the complete results bundle.
-It has not been copied into the default active model directory after the failed
-gate. Earlier Skin weights are not substituted. The test lock is retained;
+Default activation was initially withheld after the failed gate. After reviewing
+the measured result and successful live preview, the requester explicitly
+approved default local activation for educational use. The exact model and
+manifest were copied into `skin/artifacts/six-class/`, their checksum/class map
+were verified, and an ignored activation-decision record was saved. The measured
+quality gate remains false; no clinical deployment is approved. Earlier Skin
+weights are not substituted. The test lock is retained;
 thresholds and model selection were not changed after viewing these results.
 
 The 85% accuracy / 0.85 macro-F1 / 0.70 minimum per-class recall gate is an
@@ -228,6 +233,16 @@ verify the API contract and are not another accuracy estimate.
 
 Reported CPU inference times for these sequential requests were 1.07–1.94s;
 this small functional check is not a capacity benchmark. The temporary server
-was stopped after verification. The separate real-model pytest marker remains
-deselected in the full suite; actual readiness is established by explicit
+was stopped after verification. The earlier full suite deselected the separate
+real-model marker; actual readiness was also established by explicit
 non-skipping service readiness checks and live HTTP requests above.
+
+After explicit user approval of educational default activation, the same live
+checks were repeated against `skin/artifacts/six-class/` with no research-export
+path override. Both models were ready, all six validation-image requests
+returned 200 and the corrupt JPEG returned 415. The exact measured model hash
+and unchanged failed gate were retained. A final full suite explicitly included
+all markers: **121 passed, no skipped/deselected tests, three upstream warnings
+(14.21s)**. The application server was stopped after verification. The weights
+and ignored activation record are local; Git contains source and aggregate
+evidence only. Clinical deployment was not approved.
