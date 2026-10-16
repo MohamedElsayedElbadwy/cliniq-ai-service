@@ -209,5 +209,8 @@ non-skin images. Model confidence is not the probability of a correct diagnosis.
 
 The release has no repository-wide license; its card notes unverified upstream
 photograph rights and clinically unverified labels. Preserve that provenance.
-This work is a research/technical prototype, with no clinical, external-site or
-demographic validation.
+This work is a research/technical prototype, with no clinical or demographic
+validation. A later independent [SCIN research evaluation](EXTERNAL_SCIN_EVALUATION.md)
+measured 47.83% agreement across five diseases and failed its external gate.
+Keep that frozen audit separate from future training/validation data; improving
+same-source validation accuracy alone does not demonstrate improved generalization.

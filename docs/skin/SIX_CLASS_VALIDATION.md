@@ -267,3 +267,21 @@ reported ready with six classes. Swagger visibly showed the new limits and
 documented 413 response. No input photograph was added to Git, and model weights,
 measured evaluation and educational activation were unchanged. The local API
 was left running on port 8080 for continued testing.
+
+## Independent external generalization audit (2026-10-16)
+
+The unchanged active model was evaluated on 138 frozen SCIN cases from an
+independent source after encoded/pixel/perceptual overlap checks against all
+5,372 original images. It matched the top dermatologist-derived label on
+66/138 images (47.83%), with balanced accuracy 45.44% and five-disease macro-F1
+0.4818. Normal was not included. This failed the prespecified external disease
+gate and indicates that better training data and retraining are needed.
+The full [external report](EXTERNAL_SCIN_EVALUATION.md) includes per-class
+counts, uncertainty, exclusions, source hashes, label-mapping limitations and
+abstention results. No model or threshold was tuned from this audit.
+
+A live 30-image serving parity check matched saved validation probabilities
+within 0.000000638. The full shared suite after the audit passed **124 tests,
+no skipped/deselected tests, three upstream warnings (51.95s)**. External test
+images, case-level predictions and the six-image manual-testing ZIP remain
+in the ignored local workspace; only aggregate results are tracked.

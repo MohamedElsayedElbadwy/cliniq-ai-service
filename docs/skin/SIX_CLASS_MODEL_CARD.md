@@ -35,6 +35,25 @@ requester explicitly approved local default activation for educational use.
 The artifact's measured quality gate remains false. Weights remain outside Git;
 the local activation record does not constitute clinical deployment approval.
 
-Research prototype only. Diagnoses and upstream photograph rights were not independently verified. Patient IDs are unavailable; grouped image deduplication does not establish patient independence. No external-site, demographic or clinical validation was performed. Normal is an inherited dataset label. Training-only inspection found stock/selfie imagery and watermarks, which permit source shortcuts.
+Research prototype only. Diagnoses and upstream photograph rights were not independently verified. Patient IDs are unavailable; grouped image deduplication does not establish patient independence. No demographic or clinical validation was performed. Normal is an inherited dataset label. Training-only inspection found stock/selfie imagery and watermarks, which permit source shortcuts.
+
+## Independent external evaluation (2026-10-16)
+
+The unchanged model was tested through the live API on 138 frozen SCIN cases
+with top dermatologist differential-label weight >=0.6, one image per case.
+No encoded/pixel exact match or configured perceptual near match was detected
+against all 5,372 original train/validation/test images. Agreement was
+**47.83% (66/138)**, balanced accuracy **45.44%**, and macro-F1 across the five
+evaluated diseases **0.4818**. Normal lacked a verified external label and was
+not evaluated; Tinea-to-Ringworm mapping is approximate. This is research-label
+agreement, not clinical accuracy. The >=0.8 label-weight subset also performed
+poorly (49.35%, 77 cases). The existing abstention rule answered 62/138 cases
+with only 54.84% agreement among answered cases, so its same-source validation
+target does not transfer to this external source.
+
+The model failed the external disease gate and needs improved training data
+and retraining followed by an additional untouched external holdout. No model,
+threshold or class-score adjustment was made from these test results.
+See [the complete protocol, per-class results and limits](EXTERNAL_SCIN_EVALUATION.md).
 
 [Full aggregate metrics and confusion matrix](six_class_evaluation.json).
