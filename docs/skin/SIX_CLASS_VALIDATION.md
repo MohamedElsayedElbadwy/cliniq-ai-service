@@ -246,3 +246,24 @@ all markers: **121 passed, no skipped/deselected tests, three upstream warnings
 (14.21s)**. The application server was stopped after verification. The weights
 and ignored activation record are local; Git contains source and aggregate
 evidence only. Clinical deployment was not approved.
+
+## Upload-size regression verification (2026-10-16)
+
+A 7,733,630-byte JPEG (3333 by 5000 pixels) was rejected by the former
+5 MiB file limit despite being below the unchanged 20-million-pixel limit.
+The Skin default is now 10 MiB, with bounded multipart ingestion and in-memory
+uploads retained. Oversized-file errors state the configured limit, and
+OpenAPI/Swagger documents HTTP 400, 413, 415, 500 and 503 with the existing
+`detail` error body. Successful prediction responses are unchanged.
+
+Regression tests first reproduced the rejection and missing error documentation.
+After the fix, all six focused upload checks passed. The full shared suite,
+including the real-model marker, passed **124 tests, no skipped/deselected tests,
+three upstream warnings (24.38s)**. Live HTTP verification against the restarted
+central application accepted the same JPEG with HTTP 200 and normalized six-class
+probabilities. A synthetic file above 10 MiB returned 413 with the configured
+limit in its message. Root, Swagger, OpenAPI and MRI health returned 200; Skin
+reported ready with six classes. Swagger visibly showed the new limits and
+documented 413 response. No input photograph was added to Git, and model weights,
+measured evaluation and educational activation were unchanged. The local API
+was left running on port 8080 for continued testing.

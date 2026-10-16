@@ -78,8 +78,10 @@ classes usually points to a preprocessing mismatch, not a class-order problem.
 The optional Skin module uses the same central application:
 
 - `GET /api/ai/skin/health` reports `status`, `modelAvailable`, `message`, `modelVersion`, and `classCount`.
-- `POST /api/ai/skin/predict` accepts multipart `file` in JPEG/PNG with matching extension/content, up to 5 MiB and 20 million decoded pixels.
+- `POST /api/ai/skin/predict` accepts multipart `file` in JPEG/PNG with matching extension/content, up to 10 MiB and 20 million decoded pixels by default.
 - Returns `predictedClass` (null when abstained), calibrated `confidence`, `abstained`, `abstainReason`, `topPredictions`, all-class `probabilities`, `modelVersion`, `inferenceMs`, and `disclaimer`.
+
+Swagger documents upload errors, including HTTP 413. Oversized file responses state the configured size limit in `detail`; reduce the image size before retrying. `SKIN_MAX_UPLOAD_BYTES` and `SKIN_MAX_PIXELS` override these defaults after restart. Existing installations with `SKIN_MAX_UPLOAD_BYTES=5242880` should change it to `10485760` to allow files up to 10 MiB. Multipart overhead is capped separately; uploads remain in memory.
 
 The active project trains **Acne, Eczema, Psoriasis, Rosacea, Ringworm and Normal** from the pinned [Skin Assessment dataset](https://huggingface.co/datasets/Cuebot/skin-assessment-13-class-filtered). It starts a new ImageNet transfer-learning run and does not reuse old Skin data, weights, splits or metrics. See [six-class training instructions](docs/skin/SIX_CLASS_TRAINING.md) and [Colab/Kaggle GPU notebook](skin/training/skin_six_colab.ipynb).
 

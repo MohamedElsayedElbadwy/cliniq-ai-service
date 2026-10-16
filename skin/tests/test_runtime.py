@@ -90,7 +90,9 @@ def test_bad_uploads(client,name,data,content_type,code):
 
 def test_size_pixel_caps_and_form_field(client,monkeypatch):
     monkeypatch.setenv('SKIN_MAX_UPLOAD_BYTES','100')
-    assert client.post('/api/ai/skin/predict',files={'file':('a.jpg',b'x'*101,'image/jpeg')}).status_code==413
+    response=client.post('/api/ai/skin/predict',files={'file':('a.jpg',b'x'*101,'image/jpeg')})
+    assert response.status_code==413
+    assert '100 bytes' in response.json()['detail']
     monkeypatch.setenv('SKIN_MAX_UPLOAD_BYTES','5242880')
     monkeypatch.setenv('SKIN_MAX_PIXELS','100')
     assert client.post('/api/ai/skin/predict',files={'file':('a.png',image_bytes(),'image/png')}).status_code==413
@@ -242,7 +244,8 @@ def test_inference_queue_does_not_exhaust_shared_workers(predictor):
         app.dependency_overrides.clear()
 
 
-def test_valid_large_upload_stays_in_memory(client,monkeypatch):
+@pytest.mark.parametrize('side',[800,1500])
+def test_valid_large_upload_stays_in_memory(client,monkeypatch,side):
     import starlette.formparsers as parsers
     original=parsers.SpooledTemporaryFile
     opened=[]
@@ -252,11 +255,28 @@ def test_valid_large_upload_stays_in_memory(client,monkeypatch):
         return stream
     monkeypatch.setattr(parsers,'SpooledTemporaryFile',track)
     buffer=io.BytesIO()
-    Image.fromarray(np.random.default_rng(42).integers(0,256,(800,800,3),dtype=np.uint8)).save(buffer,format='PNG')
+    Image.fromarray(np.random.default_rng(42).integers(0,256,(side,side,3),dtype=np.uint8)).save(buffer,format='PNG')
     assert len(buffer.getvalue())>1024*1024
     response=client.post('/api/ai/skin/predict',files={'file':('a.png',buffer.getvalue(),'image/png')})
     assert response.status_code==200
     assert opened and all(not stream._rolled for stream in opened)
+
+
+def test_declared_oversized_body_reports_configured_limit(client,monkeypatch):
+    monkeypatch.setenv('SKIN_MAX_UPLOAD_BYTES','100')
+    response=client.post('/api/ai/skin/predict',content=b'',headers={
+        'Content-Type':'multipart/form-data; boundary=BOUNDARY','Content-Length':'65637'})
+    assert response.status_code==413
+    assert '100 bytes' in response.json()['detail']
+
+
+def test_openapi_documents_skin_upload_errors():
+    responses=app.openapi()['paths']['/api/ai/skin/predict']['post']['responses']
+    assert {'400','413','415','500','503'} <= responses.keys()
+    error_schema=responses['413']['content']['application/json']['schema']
+    schema=app.openapi()['components']['schemas'][error_schema['$ref'].split('/')[-1]]
+    assert schema['properties']['detail']['type']=='string'
+    assert 'pixel' in responses['413']['description'].lower()
 
 
 def test_chunked_body_rejected_before_full_multipart_ingestion(predictor,monkeypatch):

@@ -8,6 +8,10 @@ class SkinResponseModel(BaseModel):
     model_config=ConfigDict(populate_by_name=True)
 
 
+class SkinErrorResponse(SkinResponseModel):
+    detail: str
+
+
 class TopPrediction(SkinResponseModel):
     label: str
     probability: float=Field(ge=0,le=1)

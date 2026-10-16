@@ -14,9 +14,9 @@ from fastapi.concurrency import run_in_threadpool
 
 from .config import get_settings
 from .preprocessing import ImageTooLargeError, InvalidImageError, decode_image
-from .schemas import SkinHealthResponse, SkinPredictionResponse
+from .schemas import SkinErrorResponse, SkinHealthResponse, SkinPredictionResponse
 from .service import ModelInferenceError, ModelUnavailableError, SkinPredictor, get_skin_predictor
-from .upload import SkinRoute
+from .upload import SkinRoute, upload_size_message
 
 router=APIRouter(tags=['Skin'],route_class=SkinRoute)
 logger=logging.getLogger(__name__)
@@ -41,8 +41,14 @@ def health_check(predictor: Annotated[SkinPredictor,Depends(get_skin_service)]):
         model_version=predictor.model_version,class_count=len(predictor.class_names))
 
 
-@router.post('/predict',response_model=SkinPredictionResponse,response_model_by_alias=True)
-async def predict_image(file: Annotated[UploadFile,File(description='Skin photograph in JPG, JPEG or PNG; prototype, not a medical diagnosis.')],
+@router.post('/predict',response_model=SkinPredictionResponse,response_model_by_alias=True,responses={
+    400:{'model':SkinErrorResponse,'description':'Empty, invalid or undecodable image upload.'},
+    413:{'model':SkinErrorResponse,'description':'Upload exceeds the configured file size limit (default 10 MiB), multipart body limit, or decoded pixel limit (default 20 million pixels).'},
+    415:{'model':SkinErrorResponse,'description':'Unsupported image type or extension/content mismatch.'},
+    500:{'model':SkinErrorResponse,'description':'Skin model inference failed.'},
+    503:{'model':SkinErrorResponse,'description':'Skin model unavailable or configuration invalid.'},
+})
+async def predict_image(file: Annotated[UploadFile,File(description='Skin photograph in JPG, JPEG or PNG; default limits: 10 MiB and 20 million pixels. Prototype, not a medical diagnosis.')],
                         predictor: Annotated[SkinPredictor,Depends(get_skin_service)]):
     request_id=uuid.uuid4().hex
     started=time.perf_counter()
@@ -64,7 +70,7 @@ async def predict_image(file: Annotated[UploadFile,File(description='Skin photog
                 break
             size+=len(chunk)
             if size>settings.max_upload_bytes:
-                raise HTTPException(413,'The uploaded image exceeds the configured size limit.')
+                raise HTTPException(413,upload_size_message(settings.max_upload_bytes))
             chunks.append(chunk)
         payload=b''.join(chunks)
         if not payload:

@@ -11,6 +11,11 @@ from starlette.requests import parse_options_header
 from .config import get_settings
 
 
+def upload_size_message(max_upload_bytes: int) -> str:
+    limit=f'{max_upload_bytes/(1024*1024):g} MiB' if max_upload_bytes>=1024*1024 else f'{max_upload_bytes} bytes'
+    return f'Upload too large. The image file limit is {limit}. Upload a smaller JPEG or PNG.'
+
+
 class BodyTooLarge(MultiPartException):
     pass
 
@@ -31,7 +36,7 @@ class MemoryMultipartParser(MultiPartParser):
         if self._current_part.file is not None:
             self._part_bytes+=end-start
             if self._part_bytes>self.max_upload_bytes:
-                raise BodyTooLarge('The uploaded image exceeds the configured size limit.')
+                raise BodyTooLarge(upload_size_message(self.max_upload_bytes))
         super().on_part_data(data,start,end)
 
 
@@ -46,7 +51,7 @@ class SkinRequest(Request):
         async for chunk in super().stream():
             total+=len(chunk)
             if total>self.max_body_bytes:
-                raise BodyTooLarge('The request exceeds the configured upload size limit.')
+                raise BodyTooLarge(upload_size_message(self.max_upload_bytes))
             yield chunk
 
     async def _get_form(self,*,max_files=1000,max_fields=1000,max_part_size=1024*1024):
@@ -62,7 +67,7 @@ class SkinRequest(Request):
             return await super()._get_form(max_files=max_files,max_fields=max_fields,max_part_size=max_part_size)
         except BodyTooLarge as error:
             # Starlette closes every allocated in-memory spool on MultiPartException.
-            raise HTTPException(413,'The uploaded image exceeds the configured size limit.') from error
+            raise HTTPException(413,upload_size_message(self.max_upload_bytes)) from error
         except MultiPartException as error:
             raise HTTPException(400,'Invalid multipart image upload.') from error
 
@@ -86,6 +91,6 @@ class SkinRoute(APIRoute):
                 except ValueError as error:
                     raise HTTPException(400,'Invalid request size.') from error
                 if length>settings.max_upload_bytes+65536:
-                    raise HTTPException(413,'The request exceeds the configured upload size limit.')
+                    raise HTTPException(413,upload_size_message(settings.max_upload_bytes))
             return await original(SkinRequest(request.scope,request.receive,settings.max_upload_bytes))
         return bounded_handler
