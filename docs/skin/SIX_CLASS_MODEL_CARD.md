@@ -1,4 +1,4 @@
-# Six-class Skin model: measured research prototype
+# Original six-class Skin model: measured research prototype
 
 Model: `skin-six-efficientnetb2-flip-average-d3aa8ee9417f`. Evaluated on all **804 held-out images**.
 
@@ -57,3 +57,7 @@ threshold or class-score adjustment was made from these test results.
 See [the complete protocol, per-class results and limits](EXTERNAL_SCIN_EVALUATION.md).
 
 [Full aggregate metrics and confusion matrix](six_class_evaluation.json).
+
+## Subsequent mixed-source comparison
+
+A subsequent mixed-source retraining experiment selected a 75/25 baseline/recovered logit blend on validation only. On the same 259 new blind images, agreement was **62.55% for v1 versus 65.64% for the candidate**. On the repeated 138-image SCIN development audit, agreement was **47.83% versus 50.00%**, with candidate macro-F1 **0.4789**. Historical non-Eczema images predicted Eczema increased from 27 to 33. The original six-class artifact remains the local educational default because the candidate failed the predeclared promotion rule. The new blind cohort covers five diseases; Normal remains externally unverified. See [the complete comparison, per-disease recalls, provenance and limits](V2_EVALUATION.md) and [mixed-source reproduction commands](SKIN_V2_TRAINING.md).

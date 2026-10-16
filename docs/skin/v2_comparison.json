@@ -1,0 +1,1316 @@
+{
+  "models": {
+    "v1": "d3aa8ee9417f57e323465d5d36f4162a6f5b23bc57f26064942f8852c033a375",
+    "v2": "096154581e8bd576dc6253b6324b08152950fa42f249d11f215be83924dd0fe5"
+  },
+  "results": {
+    "v1": {
+      "blind": {
+        "accuracy": 0.6254826254826255,
+        "macroPrecision": 0.5594285921686357,
+        "macroRecall": 0.6104374057315234,
+        "macroF1": 0.5517785970094988,
+        "weightedPrecision": 0.7257144078881452,
+        "weightedRecall": 0.6254826254826255,
+        "weightedF1": 0.655933743316854,
+        "top3Accuracy": 0.888030888030888,
+        "top5Accuracy": 0.972972972972973,
+        "perClass": {
+          "Acne": {
+            "precision": 0.8088235294117647,
+            "recall": 0.7051282051282052,
+            "f1": 0.7534246575342467,
+            "support": 78
+          },
+          "Eczema": {
+            "precision": 0.6197183098591549,
+            "recall": 0.6470588235294118,
+            "f1": 0.6330935251798561,
+            "support": 68
+          },
+          "Psoriasis": {
+            "precision": 0.8070175438596491,
+            "recall": 0.5,
+            "f1": 0.6174496644295302,
+            "support": 92
+          },
+          "Rosacea": {
+            "precision": 0.5161290322580645,
+            "recall": 1.0,
+            "f1": 0.6808510638297872,
+            "support": 16
+          },
+          "Ringworm": {
+            "precision": 0.045454545454545456,
+            "recall": 0.2,
+            "f1": 0.07407407407407407,
+            "support": 5
+          },
+          "Normal": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusionMatrix": [
+          [
+            55,
+            4,
+            5,
+            11,
+            3,
+            0
+          ],
+          [
+            6,
+            44,
+            6,
+            0,
+            4,
+            8
+          ],
+          [
+            7,
+            19,
+            46,
+            4,
+            14,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            16,
+            0,
+            0
+          ],
+          [
+            0,
+            4,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "support": 259,
+        "imageLevelWilson95": [
+          0.5651079722619586,
+          0.6821893920565899
+        ],
+        "abstention": {
+          "threshold": 0.6423520248342437,
+          "answered": 157,
+          "coverage": 0.6061776061776062,
+          "acceptedAccuracy": 0.7197452229299363
+        },
+        "gate": {
+          "diseaseTargetsPassed": false,
+          "sixClassExternalGatePassed": false,
+          "normalSupported": false,
+          "normalClinicallyVerified": false,
+          "minAccuracy": 0.85,
+          "minMacroF1": 0.85,
+          "minPerClassRecall": 0.7
+        }
+      },
+      "blindBySource": {
+        "atlas": {
+          "accuracy": 0.6421568627450981,
+          "macroPrecision": 0.6547645823961614,
+          "macroRecall": 0.7201345357776464,
+          "macroF1": 0.6495254154828622,
+          "weightedPrecision": 0.7727883476077491,
+          "weightedRecall": 0.6421568627450981,
+          "weightedF1": 0.6793199383937807,
+          "top3Accuracy": 0.8823529411764706,
+          "top5Accuracy": 0.9705882352941176,
+          "perClass": {
+            "Acne": {
+              "precision": 0.8461538461538461,
+              "recall": 0.7236842105263158,
+              "f1": 0.7801418439716312,
+              "support": 76
+            },
+            "Eczema": {
+              "precision": 0.42105263157894735,
+              "recall": 0.64,
+              "f1": 0.5079365079365079,
+              "support": 25
+            },
+            "Psoriasis": {
+              "precision": 0.8518518518518519,
+              "recall": 0.5168539325842697,
+              "f1": 0.6433566433566433,
+              "support": 89
+            },
+            "Rosacea": {
+              "precision": 0.5,
+              "recall": 1.0,
+              "f1": 0.6666666666666666,
+              "support": 14
+            },
+            "Ringworm": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "Normal": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": [
+            [
+              55,
+              4,
+              4,
+              10,
+              3,
+              0
+            ],
+            [
+              3,
+              16,
+              4,
+              0,
+              1,
+              1
+            ],
+            [
+              7,
+              18,
+              46,
+              4,
+              13,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              14,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "support": 204,
+          "imageLevelWilson95": [
+            0.5743063071814885,
+            0.7047525501278076
+          ],
+          "abstention": {
+            "threshold": 0.6423520248342437,
+            "answered": 125,
+            "coverage": 0.6127450980392157,
+            "acceptedAccuracy": 0.72
+          },
+          "gate": {
+            "diseaseTargetsPassed": false,
+            "sixClassExternalGatePassed": false,
+            "normalSupported": false,
+            "normalClinicallyVerified": false,
+            "minAccuracy": 0.85,
+            "minMacroF1": 0.85,
+            "minPerClassRecall": 0.7
+          }
+        },
+        "scin": {
+          "accuracy": 0.5636363636363636,
+          "macroPrecision": 0.343030303030303,
+          "macroRecall": 0.3702325581395349,
+          "macroF1": 0.3473684210526316,
+          "weightedPrecision": 0.7057851239669422,
+          "weightedRecall": 0.5636363636363637,
+          "weightedF1": 0.6233492822966508,
+          "top3Accuracy": 0.9090909090909091,
+          "top5Accuracy": 0.9818181818181818,
+          "perClass": {
+            "Acne": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 2
+            },
+            "Eczema": {
+              "precision": 0.8484848484848485,
+              "recall": 0.6511627906976745,
+              "f1": 0.736842105263158,
+              "support": 43
+            },
+            "Psoriasis": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 3
+            },
+            "Rosacea": {
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "support": 2
+            },
+            "Ringworm": {
+              "precision": 0.2,
+              "recall": 0.2,
+              "f1": 0.20000000000000004,
+              "support": 5
+            },
+            "Normal": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": [
+            [
+              0,
+              0,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              3,
+              28,
+              2,
+              0,
+              3,
+              7
+            ],
+            [
+              0,
+              1,
+              0,
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              0,
+              4,
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "support": 55,
+          "imageLevelWilson95": [
+            0.43269816346414447,
+            0.6862655763936809
+          ],
+          "abstention": {
+            "threshold": 0.6423520248342437,
+            "answered": 32,
+            "coverage": 0.5818181818181818,
+            "acceptedAccuracy": 0.71875
+          },
+          "gate": {
+            "diseaseTargetsPassed": false,
+            "sixClassExternalGatePassed": false,
+            "normalSupported": false,
+            "normalClinicallyVerified": false,
+            "minAccuracy": 0.85,
+            "minMacroF1": 0.85,
+            "minPerClassRecall": 0.7
+          }
+        }
+      },
+      "originalValidation": {
+        "accuracy": 0.8327137546468402,
+        "macroPrecision": 0.8326562490300718,
+        "macroRecall": 0.8421325838207347,
+        "macroF1": 0.8354546338813295,
+        "weightedPrecision": 0.8345132275325617,
+        "weightedRecall": 0.8327137546468402,
+        "weightedF1": 0.8313796611645481,
+        "top3Accuracy": 0.9851301115241635,
+        "top5Accuracy": 1.0,
+        "perClass": {
+          "Acne": {
+            "precision": 0.8,
+            "recall": 0.875,
+            "f1": 0.8358208955223881,
+            "support": 96
+          },
+          "Eczema": {
+            "precision": 0.8439716312056738,
+            "recall": 0.6878612716763006,
+            "f1": 0.7579617834394905,
+            "support": 173
+          },
+          "Psoriasis": {
+            "precision": 0.7569444444444444,
+            "recall": 0.8257575757575758,
+            "f1": 0.7898550724637681,
+            "support": 132
+          },
+          "Rosacea": {
+            "precision": 0.8524590163934426,
+            "recall": 0.8813559322033898,
+            "f1": 0.8666666666666666,
+            "support": 118
+          },
+          "Ringworm": {
+            "precision": 0.7922077922077922,
+            "recall": 0.8187919463087249,
+            "f1": 0.8052805280528053,
+            "support": 149
+          },
+          "Normal": {
+            "precision": 0.950354609929078,
+            "recall": 0.9640287769784173,
+            "f1": 0.9571428571428572,
+            "support": 139
+          }
+        },
+        "confusionMatrix": [
+          [
+            84,
+            2,
+            1,
+            0,
+            3,
+            6
+          ],
+          [
+            11,
+            119,
+            20,
+            7,
+            15,
+            1
+          ],
+          [
+            1,
+            7,
+            109,
+            2,
+            13,
+            0
+          ],
+          [
+            8,
+            4,
+            1,
+            104,
+            1,
+            0
+          ],
+          [
+            0,
+            8,
+            12,
+            7,
+            122,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            2,
+            0,
+            134
+          ]
+        ],
+        "support": 807,
+        "imageLevelWilson95": [
+          0.8053995250151964,
+          0.8568754415128161
+        ],
+        "abstention": {
+          "threshold": 0.6423520248342437,
+          "answered": 651,
+          "coverage": 0.8066914498141264,
+          "acceptedAccuracy": 0.9001536098310292
+        },
+        "gate": {
+          "diseaseTargetsPassed": false,
+          "sixClassExternalGatePassed": false,
+          "normalSupported": true,
+          "normalClinicallyVerified": false,
+          "minAccuracy": 0.85,
+          "minMacroF1": 0.85,
+          "minPerClassRecall": 0.7
+        }
+      },
+      "historicalAudit": {
+        "accuracy": 0.4782608695652174,
+        "macroPrecision": 0.5394982993197279,
+        "macroRecall": 0.45444444444444443,
+        "macroF1": 0.48179307116104864,
+        "weightedPrecision": 0.5514640638864241,
+        "weightedRecall": 0.4782608695652174,
+        "weightedF1": 0.49837160071649567,
+        "top3Accuracy": 0.8405797101449275,
+        "top5Accuracy": 0.9637681159420289,
+        "perClass": {
+          "Acne": {
+            "precision": 0.65625,
+            "recall": 0.65625,
+            "f1": 0.65625,
+            "support": 32
+          },
+          "Eczema": {
+            "precision": 0.4489795918367347,
+            "recall": 0.55,
+            "f1": 0.4943820224719101,
+            "support": 40
+          },
+          "Psoriasis": {
+            "precision": 0.6875,
+            "recall": 0.34375,
+            "f1": 0.4583333333333333,
+            "support": 32
+          },
+          "Rosacea": {
+            "precision": 0.5714285714285714,
+            "recall": 0.5,
+            "f1": 0.5333333333333333,
+            "support": 16
+          },
+          "Ringworm": {
+            "precision": 0.3333333333333333,
+            "recall": 0.2222222222222222,
+            "f1": 0.26666666666666666,
+            "support": 18
+          },
+          "Normal": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusionMatrix": [
+          [
+            21,
+            2,
+            1,
+            5,
+            0,
+            3
+          ],
+          [
+            4,
+            22,
+            2,
+            0,
+            4,
+            8
+          ],
+          [
+            3,
+            13,
+            11,
+            1,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            0,
+            8,
+            1,
+            2
+          ],
+          [
+            1,
+            10,
+            2,
+            0,
+            4,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "support": 138,
+        "imageLevelWilson95": [
+          0.39664111777602556,
+          0.5610581328529124
+        ],
+        "abstention": {
+          "threshold": 0.6423520248342437,
+          "answered": 62,
+          "coverage": 0.4492753623188406,
+          "acceptedAccuracy": 0.5483870967741935
+        },
+        "gate": {
+          "diseaseTargetsPassed": false,
+          "sixClassExternalGatePassed": false,
+          "normalSupported": false,
+          "normalClinicallyVerified": false,
+          "minAccuracy": 0.85,
+          "minMacroF1": 0.85,
+          "minPerClassRecall": 0.7
+        }
+      }
+    },
+    "v2": {
+      "blind": {
+        "accuracy": 0.6563706563706564,
+        "macroPrecision": 0.5661040674541818,
+        "macroRecall": 0.630910879401928,
+        "macroF1": 0.5664437754345623,
+        "weightedPrecision": 0.7375307452739577,
+        "weightedRecall": 0.6563706563706564,
+        "weightedF1": 0.6791621746425758,
+        "top3Accuracy": 0.9227799227799228,
+        "top5Accuracy": 0.9845559845559846,
+        "perClass": {
+          "Acne": {
+            "precision": 0.8260869565217391,
+            "recall": 0.7307692307692307,
+            "f1": 0.7755102040816326,
+            "support": 78
+          },
+          "Eczema": {
+            "precision": 0.6351351351351351,
+            "recall": 0.6911764705882353,
+            "f1": 0.6619718309859154,
+            "support": 68
+          },
+          "Psoriasis": {
+            "precision": 0.8166666666666667,
+            "recall": 0.532608695652174,
+            "f1": 0.6447368421052632,
+            "support": 92
+          },
+          "Rosacea": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6666666666666666,
+            "support": 16
+          },
+          "Ringworm": {
+            "precision": 0.05263157894736842,
+            "recall": 0.2,
+            "f1": 0.08333333333333333,
+            "support": 5
+          },
+          "Normal": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusionMatrix": [
+          [
+            57,
+            4,
+            3,
+            11,
+            3,
+            0
+          ],
+          [
+            5,
+            47,
+            8,
+            0,
+            4,
+            4
+          ],
+          [
+            7,
+            19,
+            49,
+            5,
+            11,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            16,
+            0,
+            0
+          ],
+          [
+            0,
+            4,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "support": 259,
+        "imageLevelWilson95": [
+          0.5966254108429866,
+          0.7115451508462819
+        ],
+        "abstention": {
+          "threshold": 0.6998088875262211,
+          "answered": 139,
+          "coverage": 0.5366795366795367,
+          "acceptedAccuracy": 0.8129496402877698
+        },
+        "gate": {
+          "diseaseTargetsPassed": false,
+          "sixClassExternalGatePassed": false,
+          "normalSupported": false,
+          "normalClinicallyVerified": false,
+          "minAccuracy": 0.85,
+          "minMacroF1": 0.85,
+          "minPerClassRecall": 0.7
+        }
+      },
+      "blindBySource": {
+        "atlas": {
+          "accuracy": 0.6617647058823529,
+          "macroPrecision": 0.6496398543896987,
+          "macroRecall": 0.7251404494382023,
+          "macroF1": 0.650867358088684,
+          "weightedPrecision": 0.7748002165319869,
+          "weightedRecall": 0.6617647058823529,
+          "weightedF1": 0.6938244699908122,
+          "top3Accuracy": 0.9264705882352942,
+          "top5Accuracy": 0.9803921568627451,
+          "perClass": {
+            "Acne": {
+              "precision": 0.8507462686567164,
+              "recall": 0.75,
+              "f1": 0.7972027972027972,
+              "support": 76
+            },
+            "Eczema": {
+              "precision": 0.40540540540540543,
+              "recall": 0.6,
+              "f1": 0.48387096774193555,
+              "support": 25
+            },
+            "Psoriasis": {
+              "precision": 0.8596491228070176,
+              "recall": 0.550561797752809,
+              "f1": 0.6712328767123288,
+              "support": 89
+            },
+            "Rosacea": {
+              "precision": 0.4827586206896552,
+              "recall": 1.0,
+              "f1": 0.6511627906976745,
+              "support": 14
+            },
+            "Ringworm": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "Normal": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": [
+            [
+              57,
+              4,
+              2,
+              10,
+              3,
+              0
+            ],
+            [
+              3,
+              15,
+              6,
+              0,
+              1,
+              0
+            ],
+            [
+              7,
+              18,
+              49,
+              5,
+              9,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              14,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "support": 204,
+          "imageLevelWilson95": [
+            0.5943858253570449,
+            0.7231639088224988
+          ],
+          "abstention": {
+            "threshold": 0.6998088875262211,
+            "answered": 112,
+            "coverage": 0.5490196078431373,
+            "acceptedAccuracy": 0.8125
+          },
+          "gate": {
+            "diseaseTargetsPassed": false,
+            "sixClassExternalGatePassed": false,
+            "normalSupported": false,
+            "normalClinicallyVerified": false,
+            "minAccuracy": 0.85,
+            "minMacroF1": 0.85,
+            "minPerClassRecall": 0.7
+          }
+        },
+        "scin": {
+          "accuracy": 0.6363636363636364,
+          "macroPrecision": 0.3396396396396396,
+          "macroRecall": 0.38883720930232557,
+          "macroF1": 0.3563636363636364,
+          "weightedPrecision": 0.7155610155610157,
+          "weightedRecall": 0.6363636363636364,
+          "weightedF1": 0.6710743801652892,
+          "top3Accuracy": 0.9090909090909091,
+          "top5Accuracy": 1.0,
+          "perClass": {
+            "Acne": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 2
+            },
+            "Eczema": {
+              "precision": 0.8648648648648649,
+              "recall": 0.7441860465116279,
+              "f1": 0.8,
+              "support": 43
+            },
+            "Psoriasis": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 3
+            },
+            "Rosacea": {
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "support": 2
+            },
+            "Ringworm": {
+              "precision": 0.16666666666666666,
+              "recall": 0.2,
+              "f1": 0.1818181818181818,
+              "support": 5
+            },
+            "Normal": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusionMatrix": [
+            [
+              0,
+              0,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              32,
+              2,
+              0,
+              3,
+              4
+            ],
+            [
+              0,
+              1,
+              0,
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              2,
+              0,
+              0
+            ],
+            [
+              0,
+              4,
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "support": 55,
+          "imageLevelWilson95": [
+            0.5042276149984125,
+            0.7506946846969275
+          ],
+          "abstention": {
+            "threshold": 0.6998088875262211,
+            "answered": 27,
+            "coverage": 0.4909090909090909,
+            "acceptedAccuracy": 0.8148148148148148
+          },
+          "gate": {
+            "diseaseTargetsPassed": false,
+            "sixClassExternalGatePassed": false,
+            "normalSupported": false,
+            "normalClinicallyVerified": false,
+            "minAccuracy": 0.85,
+            "minMacroF1": 0.85,
+            "minPerClassRecall": 0.7
+          }
+        }
+      },
+      "originalValidation": {
+        "accuracy": 0.8203221809169765,
+        "macroPrecision": 0.8213111421421458,
+        "macroRecall": 0.8308473197277352,
+        "macroF1": 0.8239493504824807,
+        "weightedPrecision": 0.822192562279028,
+        "weightedRecall": 0.8203221809169765,
+        "weightedF1": 0.8187957887787679,
+        "top3Accuracy": 0.9863692688971499,
+        "top5Accuracy": 1.0,
+        "perClass": {
+          "Acne": {
+            "precision": 0.7924528301886793,
+            "recall": 0.875,
+            "f1": 0.8316831683168316,
+            "support": 96
+          },
+          "Eczema": {
+            "precision": 0.8273381294964028,
+            "recall": 0.6647398843930635,
+            "f1": 0.7371794871794872,
+            "support": 173
+          },
+          "Psoriasis": {
+            "precision": 0.7323943661971831,
+            "recall": 0.7878787878787878,
+            "f1": 0.7591240875912407,
+            "support": 132
+          },
+          "Rosacea": {
+            "precision": 0.859504132231405,
+            "recall": 0.8813559322033898,
+            "f1": 0.8702928870292886,
+            "support": 118
+          },
+          "Ringworm": {
+            "precision": 0.7658227848101266,
+            "recall": 0.8120805369127517,
+            "f1": 0.7882736156351792,
+            "support": 149
+          },
+          "Normal": {
+            "precision": 0.950354609929078,
+            "recall": 0.9640287769784173,
+            "f1": 0.9571428571428572,
+            "support": 139
+          }
+        },
+        "confusionMatrix": [
+          [
+            84,
+            2,
+            2,
+            0,
+            3,
+            5
+          ],
+          [
+            11,
+            115,
+            21,
+            7,
+            17,
+            2
+          ],
+          [
+            1,
+            8,
+            104,
+            2,
+            17,
+            0
+          ],
+          [
+            9,
+            4,
+            1,
+            104,
+            0,
+            0
+          ],
+          [
+            0,
+            9,
+            13,
+            6,
+            121,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            2,
+            0,
+            134
+          ]
+        ],
+        "support": 807,
+        "imageLevelWilson95": [
+          0.7923357973604171,
+          0.8452734348462542
+        ],
+        "abstention": {
+          "threshold": 0.6998088875262211,
+          "answered": 597,
+          "coverage": 0.7397769516728625,
+          "acceptedAccuracy": 0.9212730318257957
+        },
+        "gate": {
+          "diseaseTargetsPassed": false,
+          "sixClassExternalGatePassed": false,
+          "normalSupported": true,
+          "normalClinicallyVerified": false,
+          "minAccuracy": 0.85,
+          "minMacroF1": 0.85,
+          "minPerClassRecall": 0.7
+        }
+      },
+      "historicalAudit": {
+        "accuracy": 0.5,
+        "macroPrecision": 0.543939393939394,
+        "macroRecall": 0.4618055555555555,
+        "macroF1": 0.47894044213060677,
+        "weightedPrecision": 0.5482464395507873,
+        "weightedRecall": 0.5,
+        "weightedF1": 0.4972418015895512,
+        "top3Accuracy": 0.8913043478260869,
+        "top5Accuracy": 0.9855072463768116,
+        "perClass": {
+          "Acne": {
+            "precision": 0.6785714285714286,
+            "recall": 0.59375,
+            "f1": 0.6333333333333334,
+            "support": 32
+          },
+          "Eczema": {
+            "precision": 0.47619047619047616,
+            "recall": 0.75,
+            "f1": 0.58252427184466,
+            "support": 40
+          },
+          "Psoriasis": {
+            "precision": 0.5714285714285714,
+            "recall": 0.25,
+            "f1": 0.34782608695652173,
+            "support": 32
+          },
+          "Rosacea": {
+            "precision": 0.6363636363636364,
+            "recall": 0.4375,
+            "f1": 0.5185185185185185,
+            "support": 16
+          },
+          "Ringworm": {
+            "precision": 0.35714285714285715,
+            "recall": 0.2777777777777778,
+            "f1": 0.31250000000000006,
+            "support": 18
+          },
+          "Normal": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "support": 0
+          }
+        },
+        "confusionMatrix": [
+          [
+            19,
+            5,
+            2,
+            4,
+            0,
+            2
+          ],
+          [
+            1,
+            30,
+            2,
+            0,
+            4,
+            3
+          ],
+          [
+            3,
+            16,
+            8,
+            0,
+            4,
+            1
+          ],
+          [
+            4,
+            2,
+            0,
+            7,
+            1,
+            2
+          ],
+          [
+            1,
+            10,
+            2,
+            0,
+            5,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "support": 138,
+        "imageLevelWilson95": [
+          0.4177157906011534,
+          0.5822842093988466
+        ],
+        "abstention": {
+          "threshold": 0.6998088875262211,
+          "answered": 56,
+          "coverage": 0.4057971014492754,
+          "acceptedAccuracy": 0.625
+        },
+        "gate": {
+          "diseaseTargetsPassed": false,
+          "sixClassExternalGatePassed": false,
+          "normalSupported": false,
+          "normalClinicallyVerified": false,
+          "minAccuracy": 0.85,
+          "minMacroF1": 0.85,
+          "minPerClassRecall": 0.7
+        }
+      }
+    }
+  },
+  "promotion": {
+    "promoteEducationalCandidate": false,
+    "checks": {
+      "auditAccuracyImprovesAtLeastFivePoints": false,
+      "auditMacroF1ImprovesAtLeastFivePoints": false,
+      "blindAccuracyDoesNotFall": true,
+      "originalValidationMacroF1DropsAtMostTwoPoints": true
+    },
+    "clinicalApproval": false,
+    "normalClinicallyVerified": false
+  },
+  "dataset": {
+    "protocol": "skin-v2-scin-case-groups",
+    "seed": 42,
+    "classNames": {
+      "0": "Acne",
+      "1": "Eczema",
+      "2": "Psoriasis",
+      "3": "Rosacea",
+      "4": "Ringworm",
+      "5": "Normal"
+    },
+    "splitFileSha256s": {
+      "train": "f32de1281e6b43a2d916a3aafa31d830f32f587c1d3bdd0de814a2a679491038",
+      "val": "5a8f850af60e90c5b6ee43b777ebac51cdfd43f9b02733027dcaeadaab1ced16",
+      "test": "f5fb13fd6c7c000a7dee09d7eb91b683285bfb6d7b758d54ac6e30d8d078a2eb"
+    },
+    "classNamesSha256": "7dea5076c3b44a2a8a1533f7145eda96dc71d95008c5a2abcf116715387bed45",
+    "metadataSha256s": {
+      "scin_cases.csv": "7923ee9ba9775af413ca115c4587dc1bd32259d7936aa97fa80d88dd616ca3c3",
+      "scin_labels.csv": "616ad03c24c304f5f7ef01b4116e4d3274f1c71c9b19a0e3d5620698b081a9fe"
+    },
+    "originalProvenanceSha256": "10ce823eca552cd82939e71c3b2d676c02ee7cc98ebd6df65cbf8add7f849204",
+    "frozenAuditCases": 141,
+    "originalAndFrozenImagesCompared": 5669,
+    "rejectedCaseReasons": {
+      "protected_duplicate_component": 79,
+      "overlap_with_original_or_frozen_audit": 1
+    },
+    "technicalOriginalExclusions": 2,
+    "counts": {
+      "train": {
+        "Eczema": 1399,
+        "Psoriasis": 1067,
+        "Ringworm": 757,
+        "Rosacea": 617,
+        "Acne": 827,
+        "Normal": 646
+      },
+      "val": {
+        "Eczema": 241,
+        "Psoriasis": 224,
+        "Ringworm": 154,
+        "Rosacea": 134,
+        "Acne": 175,
+        "Normal": 139
+      },
+      "test": {
+        "Eczema": 68,
+        "Acne": 78,
+        "Ringworm": 5,
+        "Psoriasis": 92,
+        "Rosacea": 16
+      }
+    },
+    "sourceCounts": {
+      "train": {
+        "original": 3759,
+        "scin": 596,
+        "atlas": 958
+      },
+      "val": {
+        "original": 807,
+        "scin": 55,
+        "atlas": 205
+      },
+      "test": {
+        "scin": 55,
+        "atlas": 204
+      }
+    },
+    "originalDataRights": "Research/technical evaluation only. Inherited folder labels are not independently clinically verified. Source Kaggle CC0 declaration does not verify upstream image rights; the filtered release asserts no repository-wide license.",
+    "scinLicense": "https://github.com/google-research-datasets/scin/blob/main/LICENSE",
+    "normalClinicallyVerified": false,
+    "patientIndependence": false,
+    "labels": "SCIN unique top differential >=0.4 for training, >=0.5 validation/test; Tinea -> Ringworm; original labels inherited",
+    "grouping": "All case photos and exact/near duplicate-linked cases stay in one partition; frozen audit cases wholly excluded",
+    "testPredictionsRead": false,
+    "atlas": {
+      "stats": {
+        "verified": 1446,
+        "path_label_mismatch": 20,
+        "protected_overlap": 79,
+        "retained": 1367
+      },
+      "metadataSha256": "851dfaabf1791c2a8b1c2957619f3e0673cf0002f4ce924a5c02d185c7d4a1cd",
+      "source": "https://github.com/mattgroh/fitzpatrick17k",
+      "distribution": "asosenge/fitzpatrick17k",
+      "license": "CC-BY-NC-SA-3.0; educational noncommercial research only",
+      "identity": "Each admitted encoded image matches original-author MD5; QC/path labels filtered",
+      "labels": "Acne/acne vulgaris, eczema, psoriasis, rosacea; no healthy or Ringworm labels"
+    }
+  },
+  "auditManifestSha256": "9ef5efb5e367467e80b5a09be99d12fddf28071fc7036d370db4a33979f2b27a",
+  "caveats": [
+    "SCIN differential labels are not definitive clinical diagnoses.",
+    "No verified Normal external controls; six-class clinical/generalization gate cannot pass.",
+    "Case and duplicate grouping cannot establish patient independence.",
+    "Wilson intervals describe image-level sampling uncertainty only; source/label bias remains."
+  ]
+}
