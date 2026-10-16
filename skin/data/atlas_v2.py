@@ -28,7 +28,7 @@ def verified_atlas_images(archive,records,cache):
                 counts['author_identity_mismatch']+=1;continue
             seen.add(identity)
             target=Path(cache)/'atlas'/label/(identity+'.jpg');target.parent.mkdir(parents=True,exist_ok=True)
-            if not target.exists():target.write_bytes(payload)
+            if not target.exists() or hashlib.md5(target.read_bytes()).hexdigest()!=identity:target.write_bytes(payload)
             audit=inspect_image(target)
             if audit['error'] or audit['format'] not in {'JPEG','PNG'} or min(audit['width'],audit['height'])<64 or audit['contrast']<3:
                 counts['technical_quality']+=1;continue

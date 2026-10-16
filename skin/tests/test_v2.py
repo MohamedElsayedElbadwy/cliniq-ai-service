@@ -105,3 +105,16 @@ def test_atlas_accepts_verified_bytes_and_rejects_flagged_labels(tmp_path):
     rows,stats=verified_atlas_images(archive,[record],tmp_path/'cache')
     assert len(rows)==1 and rows[0]['source_md5']==key and stats['verified']==1
     assert verified_atlas_images(archive,[dict(record,qc='3 Wrongly Labelled')],tmp_path/'cache')[0]==[]
+    cached=tmp_path/'cache'/'atlas'/'Rosacea'/(key+'.jpg')
+    cached.write_bytes(b'poisoned cache')
+    rows,_=verified_atlas_images(archive,[record],tmp_path/'cache')
+    assert len(rows)==1 and cached.read_bytes()==payload
+
+
+def test_promotion_requires_every_predeclared_condition():
+    from skin.training.compare_v2 import promotion_rule
+    baseline={'auditAccuracy':.48,'auditMacroF1':.48,'blindAccuracy':.6,'originalMacroF1':.83}
+    candidate={'auditAccuracy':.54,'auditMacroF1':.54,'blindAccuracy':.61,'originalMacroF1':.82}
+    assert promotion_rule(baseline,candidate)['promoteEducationalCandidate'] is True
+    for key,value in [('auditAccuracy',.52),('auditMacroF1',.52),('blindAccuracy',.59),('originalMacroF1',.80)]:
+        assert promotion_rule(baseline,dict(candidate,**{key:value}))['promoteEducationalCandidate'] is False
