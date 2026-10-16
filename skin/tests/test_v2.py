@@ -159,3 +159,59 @@ def test_recovery_requires_same_protocol_and_pinned_v2_checkpoint(tmp_path):
         validate_recovery_source(config,provenance,checkpoint,'wrong')
     with pytest.raises(ValueError,match='v2|test'):
         validate_recovery_source(dict(config,testPredictionsRead=True),provenance,checkpoint,sha256(checkpoint))
+
+
+def test_validation_blend_can_improve_new_domain_and_preserve_original():
+    from skin.training.blend_v2 import choose_blend
+    labels=np.array([0,1,2,3,4,5]+[0,1,2,3,4]+[0,1,2,3])
+    old=np.eye(6)[labels]*4;new=old.copy()
+    new[:6]=np.eye(6)[[1,2,3,4,5,0]]*4
+    old[6:11]=np.eye(6)[[1,2,3,4,0]]
+    new[6:11]=np.eye(6)[labels[6:11]]*6
+    chosen=choose_blend(labels,old,new,['original']*6+['scin']*5+['atlas']*4)
+    assert chosen['candidateWeight']==.25
+    assert chosen['selectionScore']==pytest.approx(1.)
+    assert chosen['originalMacroF1']==pytest.approx(1.)
+
+
+def test_validation_blend_prefers_single_model_on_equal_scores():
+    from skin.training.blend_v2 import choose_blend
+    labels=np.array([0,1,2,3,4,5]+[0,1,2,3,4]+[0,1,2,3])
+    logits=np.eye(6)[labels]*4
+    chosen=choose_blend(labels,logits,logits,['original']*6+['scin']*5+['atlas']*4)
+    assert chosen['candidateWeight']==0
+
+
+def test_blend_rejects_nonfinite_logits():
+    from skin.training.blend_v2 import choose_blend
+    labels=np.array([0,1,2,3,4,5]+[0,1,2,3,4]+[0,1,2,3])
+    old=np.eye(6)[labels];new=old.copy();new[0,0]=np.nan
+    with pytest.raises(ValueError,match='nonfinite'):
+        choose_blend(labels,old,new,['original']*6+['scin']*5+['atlas']*4)
+
+
+def test_external_macro_precision_uses_the_same_supported_classes_as_f1():
+    from skin.training.compare_v2 import score
+    labels=np.arange(5);logits=np.eye(6)[labels]*10
+    metrics=score(labels,logits,{'temperature':1.,'abstainThreshold':0.})
+    assert metrics['macroPrecision']==pytest.approx(1.)
+    assert metrics['macroF1']==pytest.approx(1.)
+    assert metrics['macroRecall']==pytest.approx(1.)
+
+
+@pytest.mark.real_model
+def test_blend_safe_keras_round_trip(tmp_path):
+    from skin.training.blend_v2 import build_blend
+    tf=pytest.importorskip('tensorflow')
+    def branch(name,weights):
+        inputs=tf.keras.Input((224,224,3))
+        values=tf.keras.layers.GlobalAveragePooling2D()(inputs)
+        outputs=tf.keras.layers.Dense(6,use_bias=False,kernel_initializer=tf.keras.initializers.Constant(weights))(values)
+        return tf.keras.Model(inputs,outputs,name=name)
+    old=branch('old',np.arange(18,dtype=np.float32).reshape(3,6))
+    new=branch('new',np.arange(18,dtype=np.float32).reshape(3,6)[:,::-1])
+    sample=np.full((1,224,224,3),128,dtype=np.float32)
+    expected=np.asarray(old(sample))*(.75/1.2)+np.asarray(new(sample))*(.25/.8)
+    model=build_blend(tf,old,new,.25,[1.2,.8]);model.save(tmp_path/'blend.keras')
+    loaded=tf.keras.models.load_model(tmp_path/'blend.keras',compile=False,safe_mode=True)
+    assert np.allclose(np.asarray(loaded(sample,training=False)),expected,rtol=1e-5,atol=1e-4)

@@ -82,3 +82,26 @@ using legacy weights. New checkpoint selection still uses validation only.
 Record changes of batch size/device and completed versus additional epochs;
 CPU continuation is not a bitwise replay of the cloud job. Finalize and compare
 the recovered run using the same commands and unchanged promotion conditions.
+
+Before finalizing, `python -m skin.training.blend_v2 --help` can select a graph
+from the fixed baseline/recovered blend grid on validation only. Each branch's
+logits are temperature-scaled from validation; candidate weights are 0/.25/.5/.75/1.
+Selection retains the .4/.4/.2 domain objective and requires original validation
+macro-F1 within .02 of v1. A tied single model is preferred. The built-in
+Rescaling/Add graph remains compatible with production safe-mode loading.
+A mixed graph evaluates both parents (including v1's flip-average passes),
+increasing model size and inference work. Finalize the selected run, then apply
+the unchanged external promotion checks; do not adjust the blend after scoring.
+
+For the reviewed local recovery workspace, selection and export use these separate
+directories. Keep the recovered checkpoint and selected graph for provenance:
+
+```text
+python -m skin.training.blend_v2 --workspace workspaces/skin-six-v2-reviewed --candidate-run workspaces/skin-v2-recovered-run --baseline skin/artifacts/six-class --run workspaces/skin-v2-selected-run --batch-size 16
+python -m skin.training.v2 finalize --workspace workspaces/skin-six-v2-reviewed --run workspaces/skin-v2-selected-run --output workspaces/skin-v2-selected-export --batch-size 16
+```
+
+Selection must precede external finalization. A workspace selection lock prevents
+choosing another graph after opening its test results. Do not delete that lock to
+repeat model selection. Comparison must use the preserved historical baseline,
+even if a later deployment replaces the active artifact directory.

@@ -31,6 +31,7 @@ def promotion_rule(baseline,candidate):
 def score(labels,logits,manifest):
     labels=np.asarray(labels,dtype=int)
     metrics=classification_metrics(labels,logits,CLASS_NAMES)
+    metrics['macroPrecision']=float(np.mean([v['precision'] for v in metrics['perClass'].values() if v['support']]))
     metrics['macroF1']=float(np.mean([v['f1'] for v in metrics['perClass'].values() if v['support']]))
     metrics['macroRecall']=float(np.mean([v['recall'] for v in metrics['perClass'].values() if v['support']]))
     n=len(labels);p=metrics['accuracy'];z=1.959963984540054;den=1+z*z/n

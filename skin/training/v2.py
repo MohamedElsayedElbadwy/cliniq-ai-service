@@ -186,15 +186,26 @@ def finalize(args):
     lock=args.workspace/'selection_lock.json'
     if lock.exists():
         if json.loads(lock.read_text())!=identity:raise ValueError('Different model already selected')
-    else:dump_json(lock,identity)
     tf=configure_tensorflow(require_gpu=False)
     model=tf.keras.models.load_model(args.run/'best.keras',compile=False,safe_mode=True)
     val=protocol['rows']['val'];val_logits=predict_rows(model,protocol['workspace'],val,args.batch_size)
     labels=np.array([int(r['label_idx']) for r in val])
+    actual_selection=domain_selection(labels,val_logits,[r['source'] for r in val])
+    if abs(actual_selection-completed['selectionScore'])>1e-6:raise ValueError('Selected checkpoint validation score changed')
+    blend=training_config.get('validationBlendSelection')
+    if blend:
+        original=np.array([r['source']=='original' for r in val])
+        original_f1=classification_metrics(labels[original],val_logits[original],CLASS_NAMES)['macroF1']
+        if original_f1<blend['originalMacroF1Floor']-1e-12:raise ValueError('Selected blend violates original validation retention')
     temperature=fit_temperature(val_logits,labels);abstention=choose_abstention(val_logits,labels,temperature)
+    try:
+        with lock.open('x',encoding='utf-8') as stream:json.dump(identity,stream,indent=2)
+    except FileExistsError:
+        if json.loads(lock.read_text())!=identity:raise ValueError('Different model already selected')
     args.output.mkdir(parents=True,exist_ok=False);model.save(args.output/'skin_six.keras')
     digest=sha256(args.output/'skin_six.keras')
-    manifest=dict(modelVersion='skin-six-v2-efficientnetb2-'+digest[:12],architecture='efficientnetb2',modelFile='skin_six.keras',
+    architecture=training_config['architecture']
+    manifest=dict(modelVersion='skin-six-v2-'+architecture+'-'+digest[:12],architecture=architecture,modelFile='skin_six.keras',
         modelSha256=digest,inputSize=[224,224],preprocessing=PREPROCESSING_SPEC,outputType='logits',
         classNames={str(i):name for i,name in enumerate(CLASS_NAMES)},temperature=temperature,
         abstainThreshold=abstention['threshold'],abstentionValidation=abstention,
@@ -209,6 +220,7 @@ def finalize(args):
     test=protocol['rows']['test'];logits=predict_rows(model,protocol['workspace'],test,args.batch_size)
     np.save(args.output/'blind_test_logits.npy',logits)
     raw=classification_metrics([int(r['label_idx']) for r in test],logits,CLASS_NAMES)
+    raw['macroPrecision']=float(np.mean([v['precision'] for v in raw['perClass'].values() if v['support']]))
     raw['macroF1']=float(np.mean([v['f1'] for v in raw['perClass'].values() if v['support']]))
     raw['macroRecall']=float(np.mean([v['recall'] for v in raw['perClass'].values() if v['support']]))
     dump_json(args.output/'evaluation.json',dict(blindTest=raw,gate=external_gate(raw),identity=identity,

@@ -54,6 +54,18 @@ fine-tuning epochs on CPU at batch size 8. Record this as a recovered candidate,
 not a bitwise replay or the unavailable completed Colab artifact. Keep validation
 selection/calibration and all predeclared external promotion rules unchanged.
 
+Validation-only selection ruling, before any new candidate external prediction:
+the recovered branch's original validation performance is below v1. Compare a
+fixed blend grid with recovered-model weights 0, .25, .5, .75, 1; fit each branch's
+temperature on validation only. Select domain macro-F1 using the same .4/.4/.2
+weights, subject to original validation macro-F1 staying within .02 of v1. Prefer
+a single model on tied scores. Both parents are ImageNet-origin six-class runs;
+no legacy 22-class model enters the blend. Serializable built-in Rescaling/Add
+layers combine logits; runtime input/output contracts stay unchanged. Freeze the
+chosen graph and calibration before blind/historical scoring. The historical
+external promotion thresholds remain unchanged. Report the selected weight and
+extra inference cost rather than describing the selected blend as a single net.
+
 Report primary accuracy on every included image, per-class counts/recall/F1,
 confusion matrix, coverage and accepted accuracy separately. Compare v1/v2 on
 identical blind cases and the frozen 138-image audit after model selection.
