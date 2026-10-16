@@ -81,6 +81,23 @@ def split_cases(records):
     return assignment
 
 
+def protected_case_ids(candidates,references):
+    """Close duplicate AND whole-case links before removing protected images."""
+    clusters=find_clusters(references+candidates)
+    parent={cluster:cluster for cluster in clusters}
+    def root(key):
+        while parent[key]!=key:parent[key]=parent[parent[key]];key=parent[key]
+        return key
+    seen={}
+    for row,cluster in zip(candidates,clusters[len(references):]):
+        case=row['case_id']
+        if case in seen:
+            a,b=root(cluster),root(seen[case]);parent[max(a,b)]=min(a,b)
+        seen[case]=cluster
+    protected={root(cluster) for cluster in clusters[:len(references)]}
+    return {row['case_id'] for row,cluster in zip(candidates,clusters[len(references):]) if root(cluster) in protected}
+
+
 def _fetch(url,target,expected=None):
     if not target.exists():
         target.parent.mkdir(parents=True,exist_ok=True)
@@ -145,7 +162,13 @@ def prepare(args):
         for i,images in enumerate(pool.map(lambda r:_case_fingerprints(r,cache),selected),1):
             candidates.extend(images)
             if i%100==0:print('Audited new SCIN cases:',i,flush=True)
-    rejected={};by_case=defaultdict(list)
+    atlas=[];atlas_stats={}
+    if getattr(args,'atlas_zip',None):
+        if not args.atlas_metadata or sha256(args.atlas_metadata)!=ATLAS_METADATA_SHA256:raise ValueError('Atlas author metadata changed')
+        atlas,atlas_stats=verified_atlas_images(args.atlas_zip,list(csv.DictReader(args.atlas_metadata.open(encoding='utf-8'))),cache)
+    blocked=protected_case_ids(candidates+atlas,references)
+    rejected={key:'protected_duplicate_component' for key in blocked}
+    by_case=defaultdict(list)
     for row in candidates:
         by_case[row['case_id']].append(row)
         overlap=(row['sha256'] in encoded or row['pixel_sha256'] in pixels or
@@ -181,20 +204,14 @@ def prepare(args):
         images=images if split=='train' else images[:1]
         unique={r['sha256']:r for r in images}
         for row in unique.values():retained.append(dict(row,split=split,cluster_id='scin-'+owner(key),quality=row['weight']/len(unique)))
-    atlas_stats={}
     if getattr(args,'atlas_zip',None):
-        if not args.atlas_metadata or sha256(args.atlas_metadata)!=ATLAS_METADATA_SHA256:raise ValueError('Atlas author metadata changed')
-        atlas,atlas_stats=verified_atlas_images(args.atlas_zip,list(csv.DictReader(args.atlas_metadata.open(encoding='utf-8'))),cache)
         # Exclude atlas overlaps with every original, protected and new SCIN image,
         # including SCIN images not chosen for validation/test representation.
         protected_images=references+all_scin_candidates
-        atlas_tree=BKTree();atlas_encoded=set();atlas_pixels=set()
-        for i,row in enumerate(protected_images):
-            atlas_tree.add(row['phash'],i);atlas_encoded.add(row['sha256']);atlas_pixels.add(row['pixel_sha256'])
+        atlas_blocked=protected_case_ids(atlas,protected_images)|blocked
         clean=[]
         for row in atlas:
-            overlap=(row['sha256'] in atlas_encoded or row['pixel_sha256'] in atlas_pixels or
-                any((row['dhash']^protected_images[j]['dhash']).bit_count()<=6 for j in atlas_tree.query(row['phash'],4)))
+            overlap=row['case_id'] in atlas_blocked
             if overlap:atlas_stats['protected_overlap']=atlas_stats.get('protected_overlap',0)+1
             else:clean.append(row)
         atlas_clusters=find_clusters(clean);atlas_labels=defaultdict(set)

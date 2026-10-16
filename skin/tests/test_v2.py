@@ -118,3 +118,28 @@ def test_promotion_requires_every_predeclared_condition():
     assert promotion_rule(baseline,candidate)['promoteEducationalCandidate'] is True
     for key,value in [('auditAccuracy',.52),('auditMacroF1',.52),('blindAccuracy',.59),('originalMacroF1',.80)]:
         assert promotion_rule(baseline,dict(candidate,**{key:value}))['promoteEducationalCandidate'] is False
+
+
+def test_protection_covers_transitive_duplicates_and_case_links():
+    from skin.data.prepare_v2 import protected_case_ids
+    def row(key,value,case):
+        return dict(sha256=key,pixel_sha256=key,phash=value,dhash=value,case_id=case)
+    reference=row('protected',0,'held')
+    candidates=[row('bridge',15,'a'),row('relative',255,'b'),row('second-photo',65535,'b'),row('case-relative',1048575,'c')]
+    assert protected_case_ids(candidates,[reference])=={'a','b','c'}
+
+
+def test_finalization_rejects_changed_training_protocol():
+    from skin.training.v2 import validate_training_identity
+    with pytest.raises(ValueError,match='protocol'):
+        validate_training_identity({'splitFileSha256s':{'train':'A'}},{'splitFileSha256s':{'train':'B'}})
+
+
+def test_export_lock_rejects_calibration_changes(tmp_path):
+    from skin.training.v2 import verify_export_lock
+    from skin.data.prepare_six import sha256
+    manifest=tmp_path/'model_manifest.json';manifest.write_text('{"temperature":1}')
+    lock={'manifestSha256':sha256(manifest),'modelSha256':'model','splitFileSha256s':{'test':'test'}}
+    manifest.write_text('{"temperature":2}')
+    with pytest.raises(ValueError,match='manifest|calibration'):
+        verify_export_lock(tmp_path,lock,'model',{'test':'test'})

@@ -76,6 +76,18 @@ def external_gate(metrics,normal_verified=False):
         normalSupported=normal,normalClinicallyVerified=normal_verified,minAccuracy=.85,minMacroF1=.85,minPerClassRecall=.7)
 
 
+def validate_training_identity(config,provenance):
+    if config.get('splitFileSha256s')!=provenance['splitFileSha256s']:
+        raise ValueError('Training run and evaluation data protocol differ')
+
+
+def verify_export_lock(folder,lock,model_hash,split_hashes):
+    if lock.get('manifestSha256')!=sha256(Path(folder)/'model_manifest.json'):
+        raise ValueError('Export manifest/calibration changed after lock')
+    if lock.get('modelSha256')!=model_hash or lock.get('splitFileSha256s')!=split_hashes:
+        raise ValueError('Locked model or data protocol changed')
+
+
 def predict_rows(model,workspace,rows,batch_size):
     parts=[]
     for start in range(0,len(rows),batch_size):
@@ -167,6 +179,8 @@ def finalize(args):
     """Export and calibrate before reading new test images; no automatic promotion."""
     protocol=load_protocol(args.workspace)
     completed=json.loads((args.run/'completed.json').read_text())
+    training_config=json.loads((args.run/'train_config.json').read_text())
+    validate_training_identity(training_config,protocol['provenance'])
     if sha256(args.run/'best.keras')!=completed['modelSha256']:raise ValueError('Selected model changed')
     identity=dict(checkpointSha256=completed['modelSha256'],splitFileSha256s=protocol['provenance']['splitFileSha256s'])
     lock=args.workspace/'selection_lock.json'
@@ -185,9 +199,12 @@ def finalize(args):
         classNames={str(i):name for i,name in enumerate(CLASS_NAMES)},temperature=temperature,
         abstainThreshold=abstention['threshold'],abstentionValidation=abstention,
         qualityGate={'passed':False,'reason':'Full six-class external validation unavailable; awaiting locked comparisons'},
-        normalClinicallyVerified=False,clinicalValidation=False,trainingConfig=json.loads((args.run/'train_config.json').read_text()),
+        normalClinicallyVerified=False,clinicalValidation=False,trainingConfig=training_config,
         provenance=protocol['provenance'])
     dump_json(args.output/'model_manifest.json',manifest);dump_json(args.output/'class_names.json',manifest['classNames'])
+    export_lock=dict(checkpointSha256=completed['modelSha256'],modelSha256=digest,
+        manifestSha256=sha256(args.output/'model_manifest.json'),splitFileSha256s=identity['splitFileSha256s'])
+    with (args.output/'export_lock.json').open('x',encoding='utf-8') as stream:json.dump(export_lock,stream,indent=2)
     # The exported artifact/hash and calibration are now fixed before test predictions.
     test=protocol['rows']['test'];logits=predict_rows(model,protocol['workspace'],test,args.batch_size)
     np.save(args.output/'blind_test_logits.npy',logits)
@@ -209,7 +226,7 @@ def main():
     for name in ['train','finalize']:
         p=sub.add_parser(name);p.add_argument('--workspace',type=Path,required=True);p.add_argument('--run',type=Path,required=True)
         p.add_argument('--batch-size',type=int,default=32)
-        if name=='train':p.add_argument('--head-epochs',type=int,default=4);p.add_argument('--finetune-epochs',type=int,default=12)
+        if name=='train':p.add_argument('--head-epochs',type=int,default=3);p.add_argument('--finetune-epochs',type=int,default=8)
         else:p.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     if args.batch_size<1:parser.error('Batch size must be positive')

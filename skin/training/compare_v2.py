@@ -12,7 +12,7 @@ from skin.data.prepare_six import dump_json, sha256
 from skin.data.prepare_v2 import _fetch, SCIN_BASE
 from skin.service import SkinPredictor
 from skin.training.metrics import classification_metrics, softmax
-from skin.training.v2 import load_protocol, verify_rows, predict_rows, external_gate
+from skin.training.v2 import load_protocol, verify_rows, predict_rows, external_gate, validate_training_identity, verify_export_lock
 
 AUDIT_SHA='9ef5efb5e367467e80b5a09be99d12fddf28071fc7036d370db4a33979f2b27a'
 BASELINE_SHA='d3aa8ee9417f57e323465d5d36f4162a6f5b23bc57f26064942f8852c033a375'
@@ -51,6 +51,11 @@ def compare(args):
     evaluation=json.loads((args.candidate/'evaluation.json').read_text())
     candidate_manifest=json.loads((args.candidate/'model_manifest.json').read_text())
     baseline_manifest=json.loads((args.baseline/'model_manifest.json').read_text())
+    hashes=protocol['provenance']['splitFileSha256s']
+    validate_training_identity(candidate_manifest['trainingConfig'],protocol['provenance'])
+    if candidate_manifest['provenance']['splitFileSha256s']!=hashes or evaluation['identity']['splitFileSha256s']!=hashes:
+        raise ValueError('Candidate evaluation protocol changed')
+    verify_export_lock(args.candidate,json.loads((args.candidate/'export_lock.json').read_text()),evaluation['exportSha256'],hashes)
     if sha256(args.candidate/'skin_six.keras')!=evaluation['exportSha256']:raise ValueError('Locked candidate changed')
     if evaluation['identity']!=json.loads((args.workspace/'selection_lock.json').read_text()):raise ValueError('Selection lock changed')
     if sha256(args.baseline/'skin_six.keras')!=BASELINE_SHA:raise ValueError('Historical baseline changed')
