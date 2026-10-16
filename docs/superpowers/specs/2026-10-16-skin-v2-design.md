@@ -45,6 +45,15 @@ Calibrate temperature/abstention on validation only. Freeze
 model hash and calibration BEFORE scoring new blind cases and the old audits.
 No external-test score or threshold tuning after scoring.
 
+Recovery ruling, before any candidate external prediction: browser tooling failed
+after Colab training completed, and export did not run because its cell had a
+syntax error. The completed eight-epoch cloud checkpoint was not retrieved.
+Continue the checksum-verified local five-epoch fine-tuning checkpoint instead,
+restoring Adam at iteration 835 on identical reviewed splits, for three more
+fine-tuning epochs on CPU at batch size 8. Record this as a recovered candidate,
+not a bitwise replay or the unavailable completed Colab artifact. Keep validation
+selection/calibration and all predeclared external promotion rules unchanged.
+
 Report primary accuracy on every included image, per-class counts/recall/F1,
 confusion matrix, coverage and accepted accuracy separately. Compare v1/v2 on
 identical blind cases and the frozen 138-image audit after model selection.

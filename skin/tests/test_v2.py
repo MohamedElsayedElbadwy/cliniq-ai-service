@@ -143,3 +143,19 @@ def test_export_lock_rejects_calibration_changes(tmp_path):
     manifest.write_text('{"temperature":2}')
     with pytest.raises(ValueError,match='manifest|calibration'):
         verify_export_lock(tmp_path,lock,'model',{'test':'test'})
+
+
+def test_recovery_requires_same_protocol_and_pinned_v2_checkpoint(tmp_path):
+    from skin.training.recovery_v2 import validate_recovery_source
+    from skin.data.prepare_six import sha256
+    checkpoint=tmp_path/'best.keras';checkpoint.write_bytes(b'known six-class checkpoint')
+    config={'protocol':'skin-v2','architecture':'efficientnetb2','initialization':'fresh ImageNet; no skin checkpoint',
+            'splitFileSha256s':{'train':'A'},'testPredictionsRead':False}
+    provenance={'splitFileSha256s':{'train':'A'}}
+    validate_recovery_source(config,provenance,checkpoint,sha256(checkpoint))
+    with pytest.raises(ValueError,match='protocol'):
+        validate_recovery_source(config,{'splitFileSha256s':{'train':'B'}},checkpoint,sha256(checkpoint))
+    with pytest.raises(ValueError,match='checkpoint'):
+        validate_recovery_source(config,provenance,checkpoint,'wrong')
+    with pytest.raises(ValueError,match='v2|test'):
+        validate_recovery_source(dict(config,testPredictionsRead=True),provenance,checkpoint,sha256(checkpoint))
