@@ -35,7 +35,8 @@ Final ordering uses POSIX path strings, avoiding Windows/Linux case-sort changes
 The final frozen local run is `workspaces/skin-six-v1/`. An earlier audit folder
 is retained unchanged; it is not used by the new default training commands.
 Aggregate provenance and frozen split checksums: [six_class_dataset.json](six_class_dataset.json).
-No real test image has been used for model training, selection or prediction.
+No real test image was used for model training or selection. The final locked
+evaluation subsequently predicted all 804 held-out images once.
 Patient independence remains unverified because patient IDs are unavailable.
 
 Seeded training-only contact sheets were inspected locally for Normal and
@@ -77,21 +78,30 @@ are not counted as passing tests. No test was removed to conceal a failure.
 Synthetic fixture weights live only under ignored test/run folders and are not
 copied into the active artifacts directory.
 
-## Pending work and performance claims
+## Measured model and activation status
 
-Held-out six-class disease accuracy is **not yet measured**. TensorFlow reports
-no usable GPU on native Windows here; use
-the provided Colab/Kaggle GPU notebook. No active six-class model manifest or
-weights are fabricated, and the old classifier is not loaded by default.
+The final held-out run measured **82.96% accuracy, 0.8323 macro-F1 on all 804 test
+images**. Minimum per-class recall was 0.7093 (Eczema). The engineering gate
+therefore **failed** its accuracy and macro-F1 targets, while every class passed
+the recall target. Full results and limits are recorded in
+[SIX_CLASS_MODEL_CARD.md](SIX_CLASS_MODEL_CARD.md) and
+[six_class_evaluation.json](six_class_evaluation.json).
+
+The artifact was exported and reloaded successfully by the real `SkinPredictor`.
+It is retained under the ignored `workspaces/skin-six-v1/export/` directory as a
+research prototype, with a private Drive copy of the complete results bundle.
+It has not been copied into the default active model directory after the failed
+gate. Earlier Skin weights are not substituted. The test lock is retained;
+thresholds and model selection were not changed after viewing these results.
 
 The 85% accuracy / 0.85 macro-F1 / 0.70 minimum per-class recall gate is an
 engineering target only. Synthetic smoke-test scores are not disease-classifier
 performance evidence. The verified source branch is published to origin as
 `feature/skin-six-class`. [Draft PR #9](https://github.com/MohamedElsayedElbadwy/cliniq-ai-service/pull/9)
 was created through the owner's signed-in browser session. A private Colab copy
-now has a T4 GPU, with TensorFlow 2.21.0/Keras 3.15.1 GPU discovery verified after
-restarting the kernel to clear preloaded NumPy. Actual GPU training, final
-held-out evaluation and artifact delivery are in progress; no accuracy is claimed yet.
+provided a T4 GPU, with TensorFlow 2.21.0/Keras 3.15.1 GPU discovery verified after
+restarting the kernel to clear preloaded NumPy. The execution/recovery history
+below explains the completed runs and artifact provenance.
 
 The first GPU run was interrupted before fine-tuning because inspection showed
 the frozen train CSV was class-sorted and its 512-image shuffle buffer could not
@@ -162,11 +172,62 @@ The optional original/mirror candidate was built and reloaded with source
 measured **accuracy 0.83271375, macro-F1 0.83545463**. Its checkpoint SHA256 is
 `333593ce7099aaa79b5abeed364dce9d5001f7b5b32db80c8a05750e4e3a6331`.
 Eczema validation recall remains 0.68786, so the improvement does not establish
-that the engineering targets will pass. A fresh B0 comparison is planned before
-freezing model selection. These are validation results, not held-out test scores.
+that the engineering targets will pass. These are validation results, not
+held-out test scores.
 
-Automatic browser downloads did not all reach disk. The first head-epoch ZIP
-was recovered locally and its model checksum, six-class map, pinned provenance
-and all split checksums were verified. That checkpoint is incomplete and is not
-installed. Completed B2 and mirror weights still require a verified durable
-transfer; a disappearing download progress bar is not treated as delivery.
+The fresh B0 comparison completed eight head and all 25 fine-tuning epochs.
+Its best checkpoint (fine-tuning epoch 24) reproduced validation accuracy
+0.80297398 and macro-F1 0.80501642. Its mirror candidate measured accuracy
+0.80421314 and macro-F1 0.80551704. B2 with mirror averaging remained the best
+of these four candidates by validation macro-F1. No test image was used to
+choose among them. The Colab runtime subsequently disconnected while the
+browser's download action was waiting for the user's save interaction.
+
+After the user completed the browser save action, the 76,736,681-byte completed
+B2 ZIP reached local disk. Its embedded best checkpoint SHA256 matched the
+completed run, with `incomplete=false`. The exact class map, pinned provenance
+and all three portable split checksums also matched the frozen local protocol.
+This supersedes the earlier incomplete first-head-epoch backup. A copy of the
+completed ZIP was uploaded into the user's authorized private `ClinIQ/skin-six`
+Drive folder; metadata readback confirmed the exact size, correct parent and
+`shared=false`. No source photographs were included.
+
+The mirror graph was recreated from the recovered B2 weights without retraining.
+A local batch-24 validation reproduction was interrupted after high memory use;
+a separate batch-4 run reproduced the exact Colab validation metrics on all 807
+images, retaining the interrupted directory and all source weights. Its exported
+artifact SHA256 is
+`d3aa8ee9417f57e323465d5d36f4162a6f5b23bc57f26064942f8852c033a375`.
+Finalization froze that hash, all split hashes, exact class order and unchanged
+85%/0.85/0.70 targets before reading test images. Validation was then used for
+temperature/abstention calibration, followed by the complete 804-image test run.
+Finalization exited nonzero because of the measured quality-gate failure,
+after retaining the report and successfully reloading/predicting through the
+production service. This is a quality-target failure, not an export/runtime crash.
+
+The private final bundle contains only the model, metadata, measured evaluation,
+runtime prediction, frozen manifests and model card; no source photographs.
+Its size is 29,428,793 bytes and SHA256 is
+`f74525def567da62ee8e81a082c3fdb3c4181724c31f8c3346d408a5eae8a9ca`.
+Drive metadata readback confirmed exact size, expected private folder and
+`shared=false`. The fresh full shared suite after delivery passed **120 tests**,
+one real-model test deselected and three upstream warnings (53.75s).
+
+## Actual exported-model HTTP verification
+
+The existing central Uvicorn application was started with process-local
+`SKIN_MODEL_PATH`/`SKIN_MANIFEST_PATH` overrides pointing at the research export;
+default active artifacts were not changed. Both MRI and Skin reported ready,
+with Skin reporting exactly six classes and the expected model version.
+`/`, `/docs`, `/openapi.json` and both health routes returned HTTP 200; the
+Voice/MRI/Skin prediction routes were present in OpenAPI. One fixed validation
+image per class was uploaded using its actual JPEG/PNG media type. All six
+requests returned 200 with the exact six probability keys, normalized scores
+and matching model version. A corrupt JPEG returned 415. These six samples
+verify the API contract and are not another accuracy estimate.
+
+Reported CPU inference times for these sequential requests were 1.07–1.94s;
+this small functional check is not a capacity benchmark. The temporary server
+was stopped after verification. The separate real-model pytest marker remains
+deselected in the full suite; actual readiness is established by explicit
+non-skipping service readiness checks and live HTTP requests above.

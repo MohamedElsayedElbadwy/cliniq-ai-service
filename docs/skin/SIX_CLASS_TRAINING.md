@@ -37,7 +37,7 @@ augmentations and 161 exact duplicates: 3,761 train / 807 validation / 804 test.
 No detected byte/pixel/similarity-cluster overlap remains. The portable final
 local protocol is under `workspaces/skin-six-v1/`; its aggregate provenance is
 checked in as [six_class_dataset.json](six_class_dataset.json). See
-[verification evidence](SIX_CLASS_VALIDATION.md) for code checks and pending GPU work.
+[verification evidence](SIX_CLASS_VALIDATION.md) for executed checks and GPU results.
 
 Do not initialize or run the legacy `skin.training.train`, `finetune`,
 `prepare_artifact` or `evaluate` commands for this project. The new commands below
@@ -156,6 +156,21 @@ No real six-class model accuracy is claimed until GPU training and this held-out
 evaluation have actually run. Technical unit/smoke-test results are not model
 performance evidence. Do not compare scores to the old dataset: the classes,
 images and split protocol differ.
+
+The completed 2026-10-16 experiment measured **82.96% accuracy and 0.8323
+macro-F1 on all 804 test images**; every class exceeded 0.70 recall, but the
+overall quality gate failed. See [the measured model card](SIX_CLASS_MODEL_CARD.md).
+The evaluated research export is retained separately from default active
+artifacts. For an explicit local research preview, point the central app at it:
+
+```powershell
+$env:SKIN_MODEL_PATH = (Resolve-Path 'workspaces/skin-six-v1/export/skin_six.keras').Path
+$env:SKIN_MANIFEST_PATH = (Resolve-Path 'workspaces/skin-six-v1/export/model_manifest.json').Path
+python -m uvicorn main:app --port 8080
+```
+
+These process-local overrides expose the measured prototype for inspection;
+they do not make the failed quality gate pass or establish clinical validity.
 
 ## Export and ClinIQ integration
 
