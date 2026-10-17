@@ -1,0 +1,6 @@
+# Colab/Kaggle training only. Match the deployed ClinIQ TensorFlow/Keras versions.
+tensorflow==2.21.0
+keras==3.15.1
+numpy==2.5.3
+Pillow==12.3.0
+pydantic>=2.9,<3

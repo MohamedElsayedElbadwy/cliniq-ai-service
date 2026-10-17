@@ -9,3 +9,6 @@ numpy==2.5.3
 Pillow==12.3.0
 tensorflow==2.21.0
 keras==3.15.1
+# TestClient and Skin's scoped in-memory multipart parser (resolved versions).
+httpx==0.28.1
+starlette==1.7.0

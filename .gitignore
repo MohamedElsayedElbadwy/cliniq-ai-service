@@ -12,3 +12,44 @@ build/
 .streamlit/
 *.log
 models/*.h5
+
+# Skin: local-only data, weights, cached features and isolated environments.
+.venv-*/
+*.keras
+*.h5
+*.pth
+*.pt
+*.onnx
+*.npz
+*.npy
+.pytest_cache/
+.test-tmp/
+splits/
+reports/image_inventory.csv
+reports/removed_files.csv
+reports/contact_sheets/
+skin/artifacts/*
+!skin/artifacts/*.json
+reports/training-cache/
+reports/final-evaluation-cache/
+reports/ood_controls/
+reports/figures/gradcam-*.jpg
+reports/experiments/*/*.keras
+reports/experiments/*/*/*.keras
+
+# Fresh six-class runs, source photographs and transferable source bundle.
+workspaces/
+.skin-six-cache/
+skin-six-source.zip
+!skin/artifacts/six-class/
+skin/artifacts/six-class/*
+!skin/artifacts/six-class/class_names.json
+
+# Approved MAKE release: only this immutable artifact bundle is published.
+!skin/artifacts/make/
+skin/artifacts/make/*
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/
+skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/*
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/README.md
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/open_clip_config.json
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/open_clip_model.safetensors

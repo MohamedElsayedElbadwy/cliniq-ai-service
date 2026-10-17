@@ -11,6 +11,8 @@ from fastapi.staticfiles import StaticFiles
 
 from mri.router import router as mri_router
 from mri.service import get_mri_predictor
+from skin.router import router as skin_router
+from skin.service import get_skin_predictor
 from voice.router import router as voice_router
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -23,6 +25,7 @@ load_dotenv(PROJECT_DIR / ".env")
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Initialize optional AI modules without blocking service startup."""
     get_mri_predictor()
+    get_skin_predictor()
     yield
 
 
@@ -30,6 +33,7 @@ app = FastAPI(title="ClinIQ AI Service", version="1.0.0", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 app.include_router(voice_router, prefix="/api/ai/voice")
 app.include_router(mri_router, prefix="/api/ai/mri")
+app.include_router(skin_router, prefix="/api/ai/skin")
 
 
 @app.get("/", include_in_schema=False)

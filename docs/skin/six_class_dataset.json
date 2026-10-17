@@ -1,0 +1,71 @@
+{
+  "dataset": "Cuebot/skin-assessment-13-class-filtered",
+  "revision": "41c48b0b0a3b9f36e645db494a0563f7cc770ebd",
+  "sourceUrl": "https://huggingface.co/datasets/Cuebot/skin-assessment-13-class-filtered",
+  "sourceArchiveSha256": "d0c5d8019d960ceccabf7dcf1dddf66ebacc0c1d7393b7340b0dbdee6b5259b1",
+  "sourceManifestSha256": "1105026c7d9b1af8939862de7e5783d883f910af94410e8bf0c436cf9da529d4",
+  "officialArchiveVerified": true,
+  "classNames": {
+    "0": "Acne",
+    "1": "Eczema",
+    "2": "Psoriasis",
+    "3": "Rosacea",
+    "4": "Ringworm",
+    "5": "Normal"
+  },
+  "classCount": 6,
+  "selection": {
+    "selectedFiles": 6761,
+    "excludedPreAugmented": 1228,
+    "selectedOriginals": 5533
+  },
+  "retained": 5372,
+  "removedReasons": {
+    "exact_duplicate": 161
+  },
+  "perClassSplits": {
+    "Acne": {
+      "val": 96,
+      "test": 96,
+      "train": 450
+    },
+    "Eczema": {
+      "train": 805,
+      "test": 172,
+      "val": 173
+    },
+    "Psoriasis": {
+      "train": 615,
+      "test": 132,
+      "val": 132
+    },
+    "Rosacea": {
+      "train": 548,
+      "test": 117,
+      "val": 118
+    },
+    "Ringworm": {
+      "train": 696,
+      "val": 149,
+      "test": 149
+    },
+    "Normal": {
+      "train": 647,
+      "val": 139,
+      "test": 138
+    }
+  },
+  "splitFileSha256s": {
+    "train": "600d5a8660f7fbdf32958848673f8e2a972bd1b3a34e524f88697434429109e0",
+    "val": "fa77d2a08816bcc3347eef6328cee66a0368ccdee5aa120d197f8e95f11cf74c",
+    "test": "d88adc0e946dbedb9f107b1e555812b798de03597e59e0828e439c12586d01f5"
+  },
+  "classNamesSha256": "7dea5076c3b44a2a8a1533f7145eda96dc71d95008c5a2abcf116715387bed45",
+  "seed": 42,
+  "splitPolicy": "70/15/15 stratified image-similarity clusters; all aug_* excluded first",
+  "phashRadius": 4,
+  "dhashRadius": 6,
+  "detectedOverlap": 0,
+  "patientIndependence": "Not established: no reliable patient identifiers",
+  "rights": "Research/technical evaluation only. Inherited folder labels are not independently clinically verified. Source Kaggle CC0 declaration does not verify upstream image rights; the filtered release asserts no repository-wide license."
+}
