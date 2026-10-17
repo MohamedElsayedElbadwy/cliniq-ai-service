@@ -75,6 +75,16 @@ classes usually points to a preprocessing mismatch, not a class-order problem.
 
 ## Skin API
 
+The selected local educational demo uses pretrained **MAKE**, without new training:
+**209/259 correct (80.69%, macro-F1 0.6943)** versus the preserved baseline's62.55%.
+This is a model-selection comparison, not a new independent final test; publisher
+image overlap is unknown. See [MAKE setup and Swagger commands](docs/skin/MAKE_SETUP.md)
+and [full metrics and limitations](docs/skin/PRETRAINED_MODEL_EVALUATION.md).
+Select `SKIN_BACKEND=make` explicitly. Its six fixed zero-shot candidates retain the
+existing response fields; unverified Normal results are always withheld. The
+preserved Keras model remains the source default for existing installs. The weaker
+native22candidate remains an [optional research backend](docs/skin/PRETRAINED_SETUP.md).
+
 The optional Skin module uses the same central application:
 
 - `GET /api/ai/skin/health` reports `status`, `modelAvailable`, `message`, `modelVersion`, and `classCount`.
@@ -83,13 +93,13 @@ The optional Skin module uses the same central application:
 
 Swagger documents upload errors, including HTTP 413. Oversized responses state the configured file or pixel limit in `detail`; reduce the image size before retrying. `SKIN_MAX_UPLOAD_BYTES` and `SKIN_MAX_PIXELS` override these defaults after restart. Existing installations with `SKIN_MAX_UPLOAD_BYTES=5242880` or `SKIN_MAX_PIXELS=20000000` should update them to `10485760` and `120000000` respectively to use the new defaults. Multipart overhead is capped separately; uploads remain in memory. The pixel count is checked before full decoding, and each upload is decoded once inside the Skin inference queue. Increasing accepted resolution does not improve model accuracy.
 
-The active project trains **Acne, Eczema, Psoriasis, Rosacea, Ringworm and Normal** from the pinned [Skin Assessment dataset](https://huggingface.co/datasets/Cuebot/skin-assessment-13-class-filtered). It starts a new ImageNet transfer-learning run and does not reuse legacy 22-class Skin data, weights, splits or metrics. See [six-class training instructions](docs/skin/SIX_CLASS_TRAINING.md) and [Colab/Kaggle GPU notebook](skin/training/skin_six_colab.ipynb).
+The preserved six-class training experiment uses **Acne, Eczema, Psoriasis, Rosacea, Ringworm and Normal** from the pinned [Skin Assessment dataset](https://huggingface.co/datasets/Cuebot/skin-assessment-13-class-filtered). That experiment starts an ImageNet transfer-learning run and does not reuse legacy 22-class Skin data, weights, splits or metrics. The selected MAKE backend requires no new training. Historical reproduction: [six-class training instructions](docs/skin/SIX_CLASS_TRAINING.md) and [Colab/Kaggle GPU notebook](skin/training/skin_six_colab.ipynb).
 
 The original six-class experiment measured **82.96% accuracy and 0.8323 macro-F1 on all 804 held-out images**. Every class exceeded 0.70 recall, but the 85% accuracy/0.85 macro-F1 engineering gate failed. After reviewing these results, the requester explicitly approved local default activation **for educational use**. The measured gate remains false; this is a research prototype. Weights remain outside Git. See the [model card and per-class results](docs/skin/SIX_CLASS_MODEL_CARD.md).
 
 An independent, frozen SCIN evaluation subsequently measured **47.83% agreement (66/138 images), 45.44% balanced accuracy and 0.4818 macro-F1 across five diseases**. No exact/near overlap was detected against the original 5,372 images. Normal was not evaluated. The model needs better training data and a fresh external evaluation; the same-source score does not establish generalization. See the [external evaluation, protocol and limitations](docs/skin/EXTERNAL_SCIN_EVALUATION.md). The historical artifact and its measured gate remain recorded for comparison.
 
-A subsequent mixed-source retraining experiment selected a 75/25 baseline/recovered logit blend on validation only. On the same 259 new blind images, agreement was **62.55% for v1 versus 65.64% for the candidate**. On the repeated 138-image SCIN development audit, agreement was **47.83% versus 50.00%**, with candidate macro-F1 **0.4789**. Historical non-Eczema images predicted Eczema increased from 27 to 33. The original six-class artifact remains the local educational default because the candidate failed the predeclared promotion rule. The new blind cohort covers five diseases; Normal remains externally unverified. See [the complete comparison, per-disease recalls, provenance and limits](docs/skin/V2_EVALUATION.md) and [mixed-source reproduction commands](docs/skin/SKIN_V2_TRAINING.md).
+A subsequent mixed-source retraining experiment selected a 75/25 baseline/recovered logit blend on validation only. On its259new blind images, agreement was **62.55% for v1 versus65.64% for the candidate**. On the repeated138image SCIN development audit, agreement was **47.83% versus50.00%**, with candidate macro-F1 **0.4789**. Historical non-Eczema images predicted Eczema increased from27to33. That comparison retained the original six-class artifact because the candidate failed its predeclared promotion rule. The cohort covers five diseases; Normal remains externally unverified. Reusing these259images for the current pretrained selection makes them a development comparison. See [historical comparison and limits](docs/skin/V2_EVALUATION.md) and [reproduction commands](docs/skin/SKIN_V2_TRAINING.md).
 
 The notebook downloads a pinned public source commit automatically; no local upload or GitHub credentials are needed. `python scripts/package_skin_six.py` also creates a source-only ZIP for manual transfer. Dataset preparation excludes supplied `aug_*` images before grouped duplicate-safe splitting. Training uses class weights, augmentation on training images only and two-stage fine-tuning; model selection uses validation macro-F1. Finalization locks the chosen model, evaluates the untouched test split and exports the actual accuracy, per-class metrics, confusion matrix and artifact metadata. The default 85% accuracy/0.85 macro-F1 target is not a measured result or a promise.
 
