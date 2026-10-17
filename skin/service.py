@@ -124,17 +124,36 @@ _GLOBAL_PREDICTOR=None
 _PREDICTOR_LOCK=threading.Lock()
 
 
+class UnavailableSkinPredictor:
+    """Configuration failure without loading or substituting any model weights."""
+    def __init__(self,message):
+        self.class_names=[];self.model_version=None;self.model=None;self.load_error=message
+
+    @property
+    def is_ready(self):return False
+
+    @property
+    def unavailable_message(self):return self.load_error
+
+    def predict_bytes(self,*args,**kwargs):raise ModelUnavailableError(self.unavailable_message)
+
+
 def get_skin_predictor():
     global _GLOBAL_PREDICTOR
     with _PREDICTOR_LOCK:
         if _GLOBAL_PREDICTOR is None:
             try:
                 settings=get_settings()
-                _GLOBAL_PREDICTOR=SkinPredictor(settings)
+                if settings.backend=='pretrained':
+                    from .pretrained import PretrainedSkinPredictor
+                    _GLOBAL_PREDICTOR=PretrainedSkinPredictor(settings)
+                elif settings.backend=='make':
+                    from .make import MakeSkinPredictor
+                    _GLOBAL_PREDICTOR=MakeSkinPredictor(settings)
+                else:
+                    _GLOBAL_PREDICTOR=SkinPredictor(settings)
             except Exception as error:
                 # Bad optional config must also leave Voice/MRI startup intact.
-                _GLOBAL_PREDICTOR=SkinPredictor(SkinSettings())
-                _GLOBAL_PREDICTOR.model=None
-                _GLOBAL_PREDICTOR.load_error='Skin configuration is invalid. Correct SKIN settings and restart.'
+                _GLOBAL_PREDICTOR=UnavailableSkinPredictor('Skin configuration is invalid. Correct SKIN settings and restart.')
                 logger.warning('Skin configuration failed (%s)',type(error).__name__)
     return _GLOBAL_PREDICTOR

@@ -19,11 +19,11 @@ class TopPrediction(SkinResponseModel):
 
 class SkinPredictionResponse(SkinResponseModel):
     predicted_class: str | None=Field(alias='predictedClass')
-    confidence: float=Field(ge=0,le=1,description='Calibrated model class probability, NOT the probability that a diagnosis is correct.')
+    confidence: float=Field(ge=0,le=1,description='Model class score, NOT diagnostic correctness. MAKE zero-shot and pretrained softmax scores are uncalibrated; MAKE scores depend on six fixed descriptions.')
     abstained: bool
     abstain_reason: str | None=Field(alias='abstainReason')
     top_predictions: list[TopPrediction]=Field(alias='topPredictions')
-    probabilities: dict[str,float]=Field(description='All class probabilities sum to one; topPredictions is a subset.')
+    probabilities: dict[str,float]=Field(description='All native class or fixed zero-shot candidate scores sum to one; topPredictions is a subset. Labels depend on modelVersion; scores do not guarantee correctness.')
     model_version: str=Field(alias='modelVersion')
     inference_ms: float=Field(alias='inferenceMs',ge=0)
     disclaimer: str=DISCLAIMER
