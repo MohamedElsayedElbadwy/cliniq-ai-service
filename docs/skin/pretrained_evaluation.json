@@ -2774,5 +2774,20 @@
     "sharedServerPeakWorkingSetBytes": 2007121920,
     "gitHead": "fec81cb",
     "trainingPerformed": false
+  },
+  "lfsRelease": {
+    "modelRevision": "5efa1915f1d0128451ddd61242aad8475bfb8e1a",
+    "directory": "skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a",
+    "oid": "sha256:4ed233070183558b9f9e4572bdb2676f7da0f2c463d9b4d436b169e62700bf47",
+    "size": 598516980,
+    "sameWeightsAndInferencePolicy": true,
+    "windowsCheckoutBytesVerified": true,
+    "fullSuite": {
+      "tests": "177",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "time": "259.077"
+    }
   }
 }

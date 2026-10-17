@@ -85,6 +85,12 @@ existing response fields; unverified Normal results are always withheld. The
 preserved Keras model remains the source default for existing installs. The weaker
 native22candidate remains an [optional research backend](docs/skin/PRETRAINED_SETUP.md).
 
+The approved MAKE checkpoint is distributed through Git LFS under
+`skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/`. Run `git lfs install`
+before cloning, or hydrate that bundle with the `git lfs pull` command in the MAKE
+setup guide. The same byte/hash-verified weights and inference policy are used;
+the older local cache remains a backup.
+
 The optional Skin module uses the same central application:
 
 - `GET /api/ai/skin/health` reports `status`, `modelAvailable`, `message`, `modelVersion`, and `classCount`.

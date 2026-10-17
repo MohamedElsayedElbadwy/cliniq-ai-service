@@ -11,7 +11,7 @@ CLASS_NAMES=('Acne', 'Eczema', 'Psoriasis', 'Rosacea', 'Ringworm', 'Normal')
 DEFAULT_MAX_UPLOAD_BYTES=10*1024*1024
 DEFAULT_MAX_PIXELS=120_000_000
 PRETRAINED_DIR=Path(__file__).resolve().parents[1]/'workspaces'/'pretrained-skin'/'1b4fccab2c8b83bf6964e394c40f0dcdd21b1d1c'
-MAKE_DIR=Path(__file__).resolve().parents[1]/'workspaces'/'pretrained-make'/'5efa1915f1d0128451ddd61242aad8475bfb8e1a'
+MAKE_DIR=Path(__file__).resolve().parent/'artifacts'/'make'/'5efa1915f1d0128451ddd61242aad8475bfb8e1a'
 
 
 @dataclass(frozen=True)

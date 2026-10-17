@@ -307,10 +307,15 @@ Preexisting untracked training/report artifacts remain untouched.
 | `docs/skin/pretrained_evaluation.json` | Aggregate machine-readable metrics, all native labels and provenance |
 | `docs/superpowers/plans/2026-10-17-pretrained-skin.md` | Execution/verification plan including expanded research scope |
 
-Large weights, image cohorts, case responses, optional virtualenv packages, local
-research downloads and test logs stay outside Git in ignored local paths.
+Image cohorts, case responses, optional virtualenv packages, local research
+downloads, backup checkpoints and test logs stay outside Git in ignored paths.
+After the user's explicit release request, the selected MAKE safetensors checkpoint
+is distributed through Git LFS in its pinned artifact directory; its normal Git
+blob is only an LFS pointer. The architecture config and upstream model card are
+included as text. Other model weights retain their existing storage policy.
 Original weights/maps/splits/reports, MRI, Voice and central main.py are preserved.
-No external model files or private images are committed.
+No private images or credentials are committed. The MAKE weight publication is
+explicitly authorized and retains the original bytes, identity and model card.
 
 ### Exact PowerShell startup and Swagger procedure
 
@@ -342,3 +347,27 @@ skin-tone/patient independence and live interactive-browser/provider testing.
 Gated DermFM-Zero/DermLIP were not accessed, downloaded or evaluated; no access
 restriction was bypassed. These do not block the reproducible local educational
 feature and its measured comparison; they do prevent a clinical-quality claim.
+
+## Later Git LFS release authorization
+
+After approving the measured MAKE implementation, the requester explicitly asked
+to publish the model using Git LFS. This changes artifact distribution only; it
+does not introduce new training, weights, class descriptions, thresholds or image
+processing. The selected bundle now lives at
+`skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/`.
+
+- LFS object: `open_clip_model.safetensors`,598,516,980bytes,
+  OID `sha256:4ed233070183558b9f9e4572bdb2676f7da0f2c463d9b4d436b169e62700bf47`.
+- The Git blob contains only the standard three-line LFS pointer. The matching
+  architecture/preprocessing JSON and upstream model card are normal Git files
+  with line-ending conversion disabled to preserve checksum-pinned bytes on Windows.
+- This adds the three artifact files and updates .gitattributes/.gitignore,
+  the default MAKE directory in skin/config.py, the example environment and setup
+  instructions. The existing MRI LFS entry remains intact; old MAKE cache and
+  baseline weights remain untouched.
+- Run `git lfs install` and `git lfs pull` when hydrating a checkout. Source default
+  backend compatibility is unchanged: select MAKE explicitly as documented.
+
+The upstream card is preserved verbatim, including attribution and its MIT license
+statement. Its existing trailing spaces are retained because they are part of the
+pinned byte hash; the per-file whitespace attribute is scoped to this vendored card.

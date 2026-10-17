@@ -13,6 +13,24 @@ skin recognition has not been validated.
 
 ## Install and obtain the pinned checkpoint
 
+The approved MAKE weights are published with Git LFS at
+`skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/`.
+Install Git LFS before cloning so it downloads the actual weights rather than
+leaving a small pointer file. To hydrate an existing checkout:
+
+```powershell
+git lfs install
+git lfs pull --include="skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/open_clip_model.safetensors"
+```
+
+The current directory must be the repository. Pull from the feature branch that
+contains this release. Architecture config and the upstream model card are normal
+Git text files; only the598,516,980-byte safetensors file uses LFS. The downloader
+below verifies a hydrated bundle without redownloading it. An unhydrated pointer
+is not a checkpoint: run the LFS command above before starting the API.
+The pinned model card/config have Git line-ending conversion disabled so Windows
+checkouts preserve the exact upstream bytes required by SHA256 verification.
+
 Use the existing Python3.12 environment. For a fresh checkout, create a Python3.12
 virtual environment and install existing requirements.txt first; MRI still needs
 TensorFlow. Use CPU wheels on this setup.
@@ -34,11 +52,23 @@ packages are retained. No paid service or HF token is needed.
 Checkpoint: [MAKE pinned revision](https://huggingface.co/Xieji-Li/MAKE/tree/5efa1915f1d0128451ddd61242aad8475bfb8e1a),
 598,516,980bytes, SHA256
 `4ed233070183558b9f9e4572bdb2676f7da0f2c463d9b4d436b169e62700bf47`.
-Cache: `workspaces/pretrained-make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/`.
+Default bundle: `skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/`.
 All three files, including architecture/preprocessing config, are pinned by size
 and hash. Correct cache files are reused; different existing files are preserved
 and cause an error. Serving is offline/local-only, safetensors only, strict loading.
 No request-time downloads or silent fallback.
+
+The original verified cache in `workspaces/pretrained-make/<revision>/` remains
+untouched as a local backup. For a checkout without Git LFS access, the public HF
+downloader can create a separate local cache:
+
+```powershell
+& $skinPython -m skin.download_make --output 'workspaces/make-local-cache'
+$env:SKIN_MAKE_DIR = (Resolve-Path 'workspaces/make-local-cache').Path
+```
+
+Keep that override when starting with the separate cache; do not clear it as in
+the default-bundle startup example below.
 
 The HF README states MIT; underlying Derm1M data has noncommercial research terms.
 This is an attributed local educational research demo, not evidence of commercial

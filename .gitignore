@@ -44,3 +44,12 @@ skin-six-source.zip
 !skin/artifacts/six-class/
 skin/artifacts/six-class/*
 !skin/artifacts/six-class/class_names.json
+
+# Approved MAKE release: only this immutable artifact bundle is published.
+!skin/artifacts/make/
+skin/artifacts/make/*
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/
+skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/*
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/README.md
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/open_clip_config.json
+!skin/artifacts/make/5efa1915f1d0128451ddd61242aad8475bfb8e1a/open_clip_model.safetensors

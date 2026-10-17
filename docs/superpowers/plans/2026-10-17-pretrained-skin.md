@@ -65,3 +65,20 @@ Files: new skin/evaluate_pretrained.py, docs/skin/PRETRAINED_MODEL_EVALUATION.md
 - [x] Full native regression suite177passed0skips121.76s including actual artifacts; MRI/Voice tests passed. Fresh final review followed by one RED→GREEN fix pass for resize amplification and corrected setup dependencies.
 - [x] Live central API23HTTPchecks; Swagger HTML/OpenAPI, upload errors/dimensions,108MPJPEG/exact10MiB and existing feature health/contracts; actual Eczema response and peak1.87GiBserverworking-set recorded. Interactive browser click-through and live paid-provider calls explicitly unverified.
 - [x] Delivery report,21file inventory and exact setup/start/Swagger commands completed. No training, Git commit/push/merge or changes to central main.py/oldweights/maps/data/reports.
+
+### Explicit later authorization: GitHub and Git LFS delivery
+
+The user subsequently authorized committing/pushing the approved implementation,
+then explicitly requested publication of the selected MAKE model through Git LFS.
+These later instructions supersede the earlier no-commit/no-weight-publication
+constraints for this release only. Preserve all previous model bytes and behavior.
+
+- Publish only the pinned MAKE bundle, not images, credentials, old checkpoints or
+  unrelated local experiments. Keep the existing MRI LFS rule.
+- Default MAKE location becomes skin/artifacts/make/<pinned-revision>/ so a hydrated
+  clone is usable without the old local cache. Original cache remains untouched.
+- Record actual LFS SHA256 OID/size; verify normal Git stores a pointer.
+- Preserve exact upstream card/config bytes across Windows line-ending conversion.
+  Checkout regression first failed for README and passed after scoped attributes.
+- Run the full suite from the published bundle path, verify remote LFS retrieval,
+  update the existing PR metadata, and retain main without merging.
